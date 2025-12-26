@@ -123,18 +123,38 @@ onMounted(async () => {
 });
 ```
 
-## Component Props (Future Enhancement)
+## Component Props
 
-The component can be extended to accept props:
+The component accepts the following props for customization:
 
 ```vue
 <RackDesigner
   :initial-rack-height="42"
-  :initial-rack-name="My Data Center Rack"
+  :initial-rack-name="'My Data Center Rack'"
   :device-library="customDevices"
   @rack-updated="handleRackUpdate"
+  @device-added="handleDeviceAdded"
+  @device-removed="handleDeviceRemoved"
+  @device-moved="handleDeviceMoved"
 />
 ```
+
+### Props
+
+- **initialRackHeight** (Number, default: 42): Initial height of the rack in U (10-52)
+- **initialRackName** (String, default: 'Server Rack'): Initial name of the rack
+- **deviceLibrary** (Array, default: null): Custom device library. If not provided, uses built-in devices
+
+### Events
+
+- **@rack-updated**: Emitted when rack state changes (name, height, or devices)
+  - Payload: `{ name, height, devices }`
+- **@device-added**: Emitted when a device is added to the rack
+  - Payload: `{ device, devices }`
+- **@device-removed**: Emitted when a device is removed from the rack
+  - Payload: `{ device, devices }`
+- **@device-moved**: Emitted when a device is moved to a new position
+  - Payload: `{ device, oldPosition, newPosition, devices }`
 
 ## Customization
 
