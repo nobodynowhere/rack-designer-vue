@@ -1,10 +1,9 @@
 import { createApp } from 'vue';
 import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
 import App from './App.vue';
 
-// PrimeVue Theme CSS
-import 'primevue/resources/themes/lara-light-blue/theme.css';
-import 'primevue/resources/primevue.min.css';
+// PrimeIcons CSS
 import 'primeicons/primeicons.css';
 
 // Bootstrap CSS
@@ -12,10 +11,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const app = createApp(App);
 
-// Configure PrimeVue
+// Configure PrimeVue with Aura theme (PrimeVue 4.x)
 app.use(PrimeVue, {
+  theme: {
+    preset: Aura,
+    options: {
+      darkModeSelector: false,
+    }
+  },
   ripple: true,
-  inputStyle: 'outlined',
 });
 
 app.mount('#app');
