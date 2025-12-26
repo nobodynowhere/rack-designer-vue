@@ -2,6 +2,11 @@
   "name": "rack-designer-vue",
   "version": "1.0.0",
   "description": "Vue.js Rack Layout Designer Component with PrimeVue",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "vue": "^3.4.0",
     "primevue": "^3.50.0",

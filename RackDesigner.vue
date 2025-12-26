@@ -346,9 +346,29 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 
+// Props
+const props = defineProps({
+  initialRackHeight: {
+    type: Number,
+    default: 42,
+    validator: (value) => value >= 10 && value <= 52
+  },
+  initialRackName: {
+    type: String,
+    default: 'Server Rack'
+  },
+  deviceLibrary: {
+    type: Array,
+    default: null
+  }
+});
+
+// Events
+const emit = defineEmits(['rack-updated', 'device-added', 'device-removed', 'device-moved']);
+
 // State
-const rackHeight = ref(42);
-const rackName = ref('Server Rack');
+const rackHeight = ref(props.initialRackHeight);
+const rackName = ref(props.initialRackName);
 const installedDevices = ref([]);
 const selectedDevice = ref(null);
 const deviceSearchQuery = ref('');
@@ -371,7 +391,8 @@ const rackElement = ref(null);
 const qrCanvas = ref(null);
 
 // Sample device library (in a real app, this would come from NetBox or an API)
-const availableDevices = ref([
+// Use props.deviceLibrary if provided, otherwise use default devices
+const defaultDevices = [
   {
     id: '1',
     name: 'Dell PowerEdge R740',
@@ -436,7 +457,9 @@ const availableDevices = ref([
     uHeight: 2,
     image: null,
   },
-]);
+];
+
+const availableDevices = ref(props.deviceLibrary || defaultDevices);
 
 // Computed
 const filteredDevices = computed(() => {
@@ -518,7 +541,7 @@ function handleDragLeave() {
 function handleDrop(event, u) {
   event.preventDefault();
   isDragOver.value = false;
-  
+
   if (draggedDevice.value && canDropAtPosition(u)) {
     const device = {
       ...draggedDevice.value,
@@ -526,11 +549,12 @@ function handleDrop(event, u) {
       position: u,
       label: draggedDevice.value.name,
     };
-    
+
     installedDevices.value.push(device);
+    emit('device-added', { device, devices: installedDevices.value });
     updateRackState();
   }
-  
+
   draggedDevice.value = null;
   dropTargetU.value = null;
 }
@@ -556,24 +580,27 @@ function removeDevice(device) {
       selectedDevice.value = null;
       showDeviceProperties.value = false;
     }
+    emit('device-removed', { device, devices: installedDevices.value });
     updateRackState();
   }
 }
 
 function moveDevice() {
   if (!selectedDevice.value) return;
-  
+
   const device = selectedDevice.value;
+  const oldPosition = device.position;
   const newPosition = device.position;
-  
+
   // Remove from current position temporarily
   const index = installedDevices.value.findIndex(d => d.instanceId === device.instanceId);
   const tempDevice = installedDevices.value.splice(index, 1)[0];
-  
+
   // Check if new position is valid
   if (canPlaceDevice(newPosition, device.uHeight)) {
     tempDevice.position = newPosition;
     installedDevices.value.push(tempDevice);
+    emit('device-moved', { device: tempDevice, oldPosition, newPosition, devices: installedDevices.value });
     updateRackState();
   } else {
     // Restore to original position
@@ -584,17 +611,18 @@ function moveDevice() {
 
 function addDeviceToRack() {
   if (!canAddDevice.value) return;
-  
+
   const device = {
     ...selectedDeviceToAdd.value,
     instanceId: Date.now() + Math.random(),
     position: deviceUPosition.value,
     label: deviceLabel.value || selectedDeviceToAdd.value.name,
   };
-  
+
   installedDevices.value.push(device);
+  emit('device-added', { device, devices: installedDevices.value });
   updateRackState();
-  
+
   // Reset form
   showAddDeviceDialog.value = false;
   selectedDeviceToAdd.value = null;
@@ -724,6 +752,13 @@ function decodeRackState(encoded) {
 }
 
 function updateRackState() {
+  // Emit rack-updated event with current state
+  emit('rack-updated', {
+    name: rackName.value,
+    height: rackHeight.value,
+    devices: installedDevices.value
+  });
+
   // Update URL with current state
   const state = encodeRackState();
   const url = new URL(window.location.href);
