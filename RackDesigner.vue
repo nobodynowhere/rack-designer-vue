@@ -897,7 +897,13 @@ function canPlaceDeviceForReposition(position, device) {
 
   // Check for overlaps, but ignore the device being moved
   for (let u = position; u < position + device.uHeight; u++) {
-    const deviceAtU = getDeviceAtPosition(u);
+    // Find any device that occupies this U position (not just starts at it)
+    const deviceAtU = installedDevices.value.find(d => {
+      const startU = d.position;
+      const endU = d.position + d.uHeight - 1;
+      return u >= startU && u <= endU;
+    });
+
     if (deviceAtU && deviceAtU.instanceId !== device.instanceId) {
       return false;
     }
