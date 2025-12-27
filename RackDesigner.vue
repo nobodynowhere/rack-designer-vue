@@ -210,6 +210,7 @@
                               class="chassis-slot"
                               :class="{ 'slot-occupied': getBladeInSlot(getDeviceAtPosition(u), slot) }"
                               @click.stop="openChassisSlotDialog(getDeviceAtPosition(u), slot)"
+                              @dblclick.stop="selectDevice(getDeviceAtPosition(u))"
                             >
                               <span class="slot-number">{{ slot }}</span>
                               <span v-if="getBladeInSlot(getDeviceAtPosition(u), slot)" class="slot-label">
