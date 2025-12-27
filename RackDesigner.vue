@@ -1655,6 +1655,11 @@ canvas {
   align-items: center;
   gap: 8px;
   width: 100%;
+  pointer-events: none;
+}
+
+.device-header .remove-btn {
+  pointer-events: auto;
 }
 
 .device-main-display.compact-layout .device-header {
