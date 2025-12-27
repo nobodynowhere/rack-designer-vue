@@ -891,7 +891,11 @@ function canPlaceDevice(position, height) {
 }
 
 function canPlaceDeviceForReposition(position, device) {
-  if (position < 1 || position + device.uHeight - 1 > rackHeight.value) {
+  const topU = position + device.uHeight - 1;
+  console.log(`Checking position ${position}: would occupy U${position}-U${topU}`);
+
+  if (position < 1 || topU > rackHeight.value) {
+    console.log(`  ❌ Out of bounds (rack height: ${rackHeight.value})`);
     return false;
   }
 
@@ -905,10 +909,12 @@ function canPlaceDeviceForReposition(position, device) {
     });
 
     if (deviceAtU && deviceAtU.instanceId !== device.instanceId) {
+      console.log(`  ❌ Blocked at U${u} by ${deviceAtU.label || deviceAtU.name} (U${deviceAtU.position}-U${deviceAtU.position + deviceAtU.uHeight - 1})`);
       return false;
     }
   }
 
+  console.log(`  ✅ Valid`);
   return true;
 }
 
