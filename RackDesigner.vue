@@ -363,11 +363,11 @@
     </Dialog>
 
     <!-- Device Properties Panel -->
-    <Sidebar v-model:visible="showDeviceProperties" position="right" :style="{ width: '400px' }">
+    <Drawer v-model:visible="showDeviceProperties" position="right" :style="{ width: '400px' }">
       <template #header>
         <h3>Device Properties</h3>
       </template>
-      
+
       <div v-if="selectedDevice" class="device-properties">
         <div class="mb-3">
           <label class="form-label">Device Label</label>
@@ -410,7 +410,7 @@
           @click="removeDevice(selectedDevice)"
         />
       </div>
-    </Sidebar>
+    </Drawer>
   </div>
 </template>
 
@@ -423,7 +423,7 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
 import Dialog from 'primevue/dialog';
-import Sidebar from 'primevue/sidebar';
+import Drawer from 'primevue/drawer';
 import ScrollPanel from 'primevue/scrollpanel';
 import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
