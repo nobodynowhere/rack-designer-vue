@@ -223,7 +223,7 @@
       <div class="add-device-form">
         <div class="mb-3">
           <label for="device-select" class="form-label">Select Device</label>
-          <Dropdown
+          <Select
             id="device-select"
             v-model="selectedDeviceToAdd"
             :options="availableDevices"
@@ -238,7 +238,7 @@
                 <Tag :value="`${slotProps.option.uHeight}U`" severity="info" />
               </div>
             </template>
-          </Dropdown>
+          </Select>
         </div>
         
         <div class="mb-3">
@@ -316,7 +316,7 @@
 
         <div class="mb-3">
           <label for="blade-select" class="form-label">Select Blade Server</label>
-          <Dropdown
+          <Select
             id="blade-select"
             v-model="selectedBladeToAdd"
             :options="bladeDevices"
@@ -331,7 +331,7 @@
                 <Tag :value="slotProps.option.manufacturer" severity="info" />
               </div>
             </template>
-          </Dropdown>
+          </Select>
         </div>
 
         <div class="mb-3">
@@ -421,7 +421,7 @@ import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Dialog from 'primevue/dialog';
 import Drawer from 'primevue/drawer';
 import ScrollPanel from 'primevue/scrollpanel';
