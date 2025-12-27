@@ -171,7 +171,7 @@
                           <div
                             class="device-main-display"
                             :class="{ 'compact-layout': getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots?.rows && getDeviceAtPosition(u).slots.rows > 1 }"
-                            @dblclick.stop="selectDevice(getDeviceAtPosition(u))"
+                            @dblclick.stop="handleDeviceDoubleClick($event, getDeviceAtPosition(u))"
                           >
                             <div class="device-header">
                               <img
@@ -210,7 +210,7 @@
                               class="chassis-slot"
                               :class="{ 'slot-occupied': getBladeInSlot(getDeviceAtPosition(u), slot) }"
                               @click.stop="openChassisSlotDialog(getDeviceAtPosition(u), slot)"
-                              @dblclick.stop="selectDevice(getDeviceAtPosition(u))"
+                              @dblclick.stop="handleDeviceDoubleClick($event, getDeviceAtPosition(u))"
                             >
                               <span class="slot-number">{{ slot }}</span>
                               <span v-if="getBladeInSlot(getDeviceAtPosition(u), slot)" class="slot-label">
@@ -1039,8 +1039,22 @@ function getChassisGridStyle(chassis) {
 }
 
 function selectDevice(device) {
+  console.log('=== selectDevice called ===');
+  console.log('Device:', device);
+  console.log('Device type:', device?.deviceType);
+  console.log('Device label:', device?.label);
+  console.log('Before - showDeviceProperties:', showDeviceProperties.value);
   selectedDevice.value = device;
   showDeviceProperties.value = true;
+  console.log('After - showDeviceProperties:', showDeviceProperties.value);
+  console.log('After - selectedDevice:', selectedDevice.value);
+}
+
+function handleDeviceDoubleClick(event, device) {
+  console.log('=== Double-click detected ===');
+  console.log('Event target:', event.target);
+  console.log('Device:', device);
+  selectDevice(device);
 }
 
 function removeDevice(device) {
@@ -1656,11 +1670,6 @@ canvas {
   align-items: center;
   gap: 8px;
   width: 100%;
-  pointer-events: none;
-}
-
-.device-header .remove-btn {
-  pointer-events: auto;
 }
 
 .device-main-display.compact-layout .device-header {
