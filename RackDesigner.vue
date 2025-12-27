@@ -155,6 +155,15 @@
                   >
                     <div class="u-label">U{{ u }}</div>
                     <div class="u-content">
+                      <!-- Invisible drag overlay for all occupied rack units -->
+                      <div
+                        v-if="getDeviceOccupyingPosition(u) && !getDeviceAtPosition(u)"
+                        class="device-drag-overlay"
+                        draggable="true"
+                        @dragstart="handleInstalledDeviceDragStart($event, getDeviceOccupyingPosition(u))"
+                        @dragend="handleInstalledDeviceDragEnd"
+                      ></div>
+
                       <template v-if="getDeviceAtPosition(u)">
                         <div
                           class="installed-device"
@@ -190,15 +199,6 @@
                                     U{{ getDeviceAtPosition(u).position }} - U{{ getDeviceAtPosition(u).position + getDeviceAtPosition(u).uHeight - 1 }}
                                   </span>
                                 </div>
-                                <Button
-                                  icon="pi pi-times"
-                                  text
-                                  rounded
-                                  severity="danger"
-                                  size="small"
-                                  class="remove-btn"
-                                  @click.stop="removeDevice(getDeviceAtPosition(u))"
-                                />
                               </div>
                             </div>
                           </div>
@@ -1605,6 +1605,20 @@ watch(showShareDialog, (visible) => {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
+}
+
+.device-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: grab;
+  z-index: 1;
+}
+
+.device-drag-overlay:active {
+  cursor: grabbing;
 }
 
 .remove-btn {
