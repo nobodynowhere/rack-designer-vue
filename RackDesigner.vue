@@ -160,7 +160,7 @@
                           class="installed-device"
                           draggable="true"
                           :style="getDeviceStyle(getDeviceAtPosition(u))"
-                          @click="selectDevice(getDeviceAtPosition(u))"
+                          @dblclick="selectDevice(getDeviceAtPosition(u))"
                           @dragstart="handleInstalledDeviceDragStart($event, getDeviceAtPosition(u))"
                           @dragend="handleInstalledDeviceDragEnd"
                           :class="{
