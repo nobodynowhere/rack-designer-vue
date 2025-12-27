@@ -543,7 +543,7 @@
         </div>
         
         <div class="mb-3">
-          <label class="form-label">Position</label>
+          <label class="form-label">Position (Bottom U)</label>
           <InputNumber
             v-model="selectedDevice.position"
             :min="1"
@@ -552,6 +552,9 @@
             class="w-100"
             @input="moveDevice"
           />
+          <small class="text-muted">
+            Occupies U{{ selectedDevice.position }} - U{{ selectedDevice.position + selectedDevice.uHeight - 1 }}
+          </small>
         </div>
         
         <Divider />
