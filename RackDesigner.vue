@@ -1596,6 +1596,16 @@ canvas {
   pointer-events: auto;
 }
 
+/* Allow drag events to pass through child elements to the parent .installed-device */
+.installed-device.is-chassis .device-main-display * {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events for the remove button so it remains clickable */
+.installed-device.is-chassis .device-main-display .remove-btn {
+  pointer-events: auto;
+}
+
 .device-main-display.compact-layout {
   position: absolute;
   left: 0;
