@@ -1651,17 +1651,14 @@ canvas {
   overflow-y: auto;
   overflow-x: hidden;
   max-height: calc(100% - 44px);
+  /* Allow drag events to pass through to parent for chassis dragging */
+  pointer-events: none;
 }
 
 .device-main-display.compact-layout ~ .chassis-slots {
   margin-top: 0;
   padding-left: 160px;
   max-height: 100%;
-  pointer-events: none;
-}
-
-.device-main-display.compact-layout ~ .chassis-slots .chassis-slot {
-  pointer-events: auto;
 }
 
 .chassis-slot {
@@ -1677,6 +1674,8 @@ canvas {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 11px;
+  /* Re-enable pointer events for individual slots so they're clickable */
+  pointer-events: auto;
 }
 
 .chassis-slot:hover {
