@@ -892,6 +892,7 @@ function canPlaceDevice(position, height) {
 
 function canPlaceDeviceForReposition(position, device) {
   if (position < 1 || position + device.uHeight - 1 > rackHeight.value) {
+    console.log(`Position ${position} out of bounds for ${device.uHeight}U device`);
     return false;
   }
 
@@ -904,11 +905,17 @@ function canPlaceDeviceForReposition(position, device) {
       return u >= startU && u <= endU;
     });
 
+    if (deviceAtU) {
+      console.log(`U${u}: Found device ${deviceAtU.label} (ID: ${deviceAtU.instanceId}), moving device ID: ${device.instanceId}`);
+    }
+
     if (deviceAtU && deviceAtU.instanceId !== device.instanceId) {
+      console.log(`U${u}: Blocked by different device ${deviceAtU.label}`);
       return false;
     }
   }
 
+  console.log(`Position ${position} is valid for device ${device.label}`);
   return true;
 }
 
