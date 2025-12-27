@@ -984,7 +984,11 @@ function getDeviceStyle(device) {
 }
 
 function getChassisGridStyle(chassis) {
-  if (!chassis.slots) return {};
+  if (!chassis.slots) {
+    return {
+      gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))'
+    };
+  }
 
   // If custom chassis with columns defined, use exact column count
   if (chassis.slots.columns) {
@@ -993,8 +997,10 @@ function getChassisGridStyle(chassis) {
     };
   }
 
-  // Default: auto-fill with minimum 40px slots
-  return {};
+  // Default: auto-fill with minimum 40px slots for predefined chassis
+  return {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))'
+  };
 }
 
 function selectDevice(device) {
@@ -1585,7 +1591,6 @@ canvas {
 
 .chassis-slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
   gap: 4px;
   padding: 8px;
   background: rgba(0, 0, 0, 0.1);
@@ -1656,8 +1661,6 @@ canvas {
     max-width: 100%;
   }
 
-  .chassis-slots {
-    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-  }
+  /* Responsive styles handled by inline styles via getChassisGridStyle */
 }
 </style>
