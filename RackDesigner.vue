@@ -1592,6 +1592,8 @@ canvas {
   align-items: center;
   padding: 4px 8px;
   min-height: 36px;
+  /* Ensure chassis headers can receive drag events even when slots have pointer-events: none */
+  pointer-events: auto;
 }
 
 .device-main-display.compact-layout {
