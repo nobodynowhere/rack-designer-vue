@@ -168,27 +168,32 @@
                             'is-chassis': getDeviceAtPosition(u).deviceType === 'chassis'
                           }"
                         >
-                          <div class="device-main-display">
-                            <img
-                              v-if="getDeviceAtPosition(u).image"
-                              :src="getDeviceAtPosition(u).image"
-                              :alt="getDeviceAtPosition(u).name"
-                              class="installed-device-image"
-                            />
-                            <div v-else class="installed-device-placeholder">
-                              <i :class="getDeviceAtPosition(u).deviceType === 'chassis' ? 'pi pi-th-large' : 'pi pi-server'" />
-                            </div>
-                            <div class="installed-device-info">
-                              <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
-                              <Button
-                                icon="pi pi-times"
-                                text
-                                rounded
-                                severity="danger"
-                                size="small"
-                                class="remove-btn"
-                                @click.stop="removeDevice(getDeviceAtPosition(u))"
+                          <div
+                            class="device-main-display"
+                            :class="{ 'compact-layout': getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots?.rows && getDeviceAtPosition(u).slots.rows > 1 }"
+                          >
+                            <div class="device-header">
+                              <img
+                                v-if="getDeviceAtPosition(u).image"
+                                :src="getDeviceAtPosition(u).image"
+                                :alt="getDeviceAtPosition(u).name"
+                                class="installed-device-image"
                               />
+                              <div v-else class="installed-device-placeholder">
+                                <i :class="getDeviceAtPosition(u).deviceType === 'chassis' ? 'pi pi-th-large' : 'pi pi-server'" />
+                              </div>
+                              <div class="installed-device-info">
+                                <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
+                                <Button
+                                  icon="pi pi-times"
+                                  text
+                                  rounded
+                                  severity="danger"
+                                  size="small"
+                                  class="remove-btn"
+                                  @click.stop="removeDevice(getDeviceAtPosition(u))"
+                                />
+                              </div>
                             </div>
                           </div>
 
@@ -1589,6 +1594,46 @@ canvas {
   min-height: 36px;
 }
 
+.device-main-display.compact-layout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  max-width: 150px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px;
+  z-index: 1;
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.device-main-display.compact-layout .device-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.device-main-display.compact-layout .installed-device-info {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.device-main-display.compact-layout .device-label {
+  font-size: 11px;
+  writing-mode: horizontal-tb;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 140px;
+}
+
 .chassis-slots {
   display: grid;
   gap: 4px;
@@ -1600,6 +1645,12 @@ canvas {
   overflow-y: auto;
   overflow-x: hidden;
   max-height: calc(100% - 44px);
+}
+
+.device-main-display.compact-layout ~ .chassis-slots {
+  margin-top: 0;
+  padding-left: 160px;
+  max-height: 100%;
 }
 
 .chassis-slot {
