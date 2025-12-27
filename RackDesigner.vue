@@ -56,7 +56,6 @@
               showButtons
               buttonLayout="horizontal"
               :step="1"
-              style="width: 150px"
             >
               <template #incrementbuttonicon>
                 <span class="pi pi-plus" />
@@ -864,13 +863,11 @@ function isUnitOccupied(u) {
 }
 
 function getDeviceAtPosition(u) {
-  // Returns device if this is the TOP U where device should be rendered
+  // Returns device if this is the BOTTOM U where device should be rendered
   // Position represents the BOTTOM U of the device (rack convention)
-  // In column-reverse layout, devices render at their TOP U and extend downward visually
-  // TOP U = position + uHeight - 1
+  // In column-reverse layout, device renders at BOTTOM U and extends upward visually using top: 0
   return installedDevices.value.find(device => {
-    const topU = device.position + device.uHeight - 1;
-    return topU === u;
+    return device.position === u;
   });
 }
 
@@ -1545,7 +1542,7 @@ watch(showShareDialog, (visible) => {
 
 .installed-device {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
