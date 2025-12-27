@@ -892,7 +892,6 @@ function canPlaceDevice(position, height) {
 
 function canPlaceDeviceForReposition(position, device) {
   if (position < 1 || position + device.uHeight - 1 > rackHeight.value) {
-    console.log(`Position ${position} out of bounds for ${device.uHeight}U device`);
     return false;
   }
 
@@ -905,17 +904,11 @@ function canPlaceDeviceForReposition(position, device) {
       return u >= startU && u <= endU;
     });
 
-    if (deviceAtU) {
-      console.log(`U${u}: Found device ${deviceAtU.label} (ID: ${deviceAtU.instanceId}), moving device ID: ${device.instanceId}`);
-    }
-
     if (deviceAtU && deviceAtU.instanceId !== device.instanceId) {
-      console.log(`U${u}: Blocked by different device ${deviceAtU.label}`);
       return false;
     }
   }
 
-  console.log(`Position ${position} is valid for device ${device.label}`);
   return true;
 }
 
@@ -1476,6 +1469,7 @@ watch(showShareDialog, (visible) => {
   border-bottom: 1px solid #546e7a;
   position: relative;
   transition: background-color 0.2s;
+  z-index: 1;
 }
 
 .rack-unit:last-child {
@@ -1506,6 +1500,7 @@ watch(showShareDialog, (visible) => {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid #5a67d8;
   border-radius: 4px;
