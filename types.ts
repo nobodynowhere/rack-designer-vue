@@ -15,6 +15,12 @@ export interface SlotConfiguration {
 
   /** What device types can be installed in these slots */
   accepts: DeviceType[];
+
+  /** Number of columns (slots per row) - optional for custom chassis */
+  columns?: number;
+
+  /** Number of rows - optional for custom chassis */
+  rows?: number;
 }
 
 export interface Device {

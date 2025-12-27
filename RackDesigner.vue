@@ -14,6 +14,12 @@
               severity="success"
             />
             <Button
+              label="Add Chassis"
+              icon="pi pi-th-large"
+              @click="showAddChassisDialog = true"
+              severity="success"
+            />
+            <Button
               label="Export PNG"
               icon="pi pi-download"
               @click="exportToPNG"
@@ -187,7 +193,11 @@
                           </div>
 
                           <!-- Chassis slot display -->
-                          <div v-if="getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots" class="chassis-slots">
+                          <div
+                            v-if="getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots"
+                            class="chassis-slots"
+                            :style="getChassisGridStyle(getDeviceAtPosition(u))"
+                          >
                             <div
                               v-for="slot in getDeviceAtPosition(u).slots.count"
                               :key="`slot-${slot}`"
@@ -267,6 +277,153 @@
       <template #footer>
         <Button label="Cancel" @click="showAddDeviceDialog = false" severity="secondary" />
         <Button label="Add" @click="addDeviceToRack" :disabled="!canAddDevice" />
+      </template>
+    </Dialog>
+
+    <!-- Add Chassis Dialog -->
+    <Dialog
+      v-model:visible="showAddChassisDialog"
+      header="Add Chassis"
+      :modal="true"
+      :style="{ width: '50vw' }"
+    >
+      <div class="add-chassis-form">
+        <div class="mb-3">
+          <label class="form-label">Chassis Type</label>
+          <div class="d-flex gap-2">
+            <Button
+              :label="chassisType === 'predefined' ? 'Predefined' : 'Predefined'"
+              :severity="chassisType === 'predefined' ? 'primary' : 'secondary'"
+              @click="chassisType = 'predefined'"
+              class="flex-1"
+            />
+            <Button
+              :label="chassisType === 'custom' ? 'Custom' : 'Custom'"
+              :severity="chassisType === 'custom' ? 'primary' : 'secondary'"
+              @click="chassisType = 'custom'"
+              class="flex-1"
+            />
+          </div>
+        </div>
+
+        <!-- Predefined Chassis -->
+        <template v-if="chassisType === 'predefined'">
+          <div class="mb-3">
+            <label for="predefined-chassis-select" class="form-label">Select Chassis</label>
+            <Select
+              id="predefined-chassis-select"
+              v-model="selectedPredefinedChassis"
+              :options="predefinedChassis"
+              optionLabel="name"
+              placeholder="Choose a chassis"
+              class="w-100"
+            >
+              <template #option="slotProps">
+                <div class="d-flex flex-column gap-1">
+                  <div><strong>{{ slotProps.option.name }}</strong></div>
+                  <div class="text-muted" style="font-size: 12px;">
+                    {{ slotProps.option.uHeight }}U, {{ slotProps.option.slots.count }} slots
+                  </div>
+                </div>
+              </template>
+            </Select>
+          </div>
+        </template>
+
+        <!-- Custom Chassis -->
+        <template v-if="chassisType === 'custom'">
+          <div class="mb-3">
+            <label for="custom-chassis-name" class="form-label">Chassis Name</label>
+            <InputText
+              id="custom-chassis-name"
+              v-model="customChassisName"
+              placeholder="e.g., Custom 4x4 Blade Chassis"
+              class="w-100"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="custom-chassis-manufacturer" class="form-label">Manufacturer</label>
+            <InputText
+              id="custom-chassis-manufacturer"
+              v-model="customChassisManufacturer"
+              placeholder="e.g., Dell, HP, Cisco"
+              class="w-100"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="custom-chassis-height" class="form-label">Chassis Height (U)</label>
+            <InputNumber
+              id="custom-chassis-height"
+              v-model="customChassisHeight"
+              :min="2"
+              :max="20"
+              showButtons
+              class="w-100"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="custom-chassis-columns" class="form-label">Slots per Row (Columns)</label>
+            <InputNumber
+              id="custom-chassis-columns"
+              v-model="customChassisColumns"
+              :min="1"
+              :max="16"
+              showButtons
+              class="w-100"
+            />
+            <small class="text-muted">Number of blade slots from left to right</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="custom-chassis-rows" class="form-label">Number of Rows</label>
+            <InputNumber
+              id="custom-chassis-rows"
+              v-model="customChassisRows"
+              :min="1"
+              :max="8"
+              showButtons
+              class="w-100"
+            />
+            <small class="text-muted">Number of vertical rows in the chassis</small>
+          </div>
+
+          <div class="mb-3">
+            <div class="p-3 bg-light rounded">
+              <strong>Total Slots:</strong> {{ customChassisColumns * customChassisRows }}
+            </div>
+          </div>
+        </template>
+
+        <!-- Common fields -->
+        <div class="mb-3">
+          <label for="chassis-label" class="form-label">Chassis Label</label>
+          <InputText
+            id="chassis-label"
+            v-model="chassisLabel"
+            placeholder="e.g., Blade Chassis 1"
+            class="w-100"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="chassis-position" class="form-label">U Position (from bottom)</label>
+          <InputNumber
+            id="chassis-position"
+            v-model="chassisUPosition"
+            :min="1"
+            :max="rackHeight"
+            showButtons
+            class="w-100"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="Cancel" @click="showAddChassisDialog = false" severity="secondary" />
+        <Button label="Add Chassis" @click="addChassisToRack" :disabled="!canAddChassis" />
       </template>
     </Dialog>
 
@@ -464,6 +621,7 @@ const dropTargetU = ref(null);
 
 // Dialogs
 const showAddDeviceDialog = ref(false);
+const showAddChassisDialog = ref(false);
 const showShareDialog = ref(false);
 const showDeviceProperties = ref(false);
 const showChassisSlotDialog = ref(false);
@@ -472,6 +630,17 @@ const showChassisSlotDialog = ref(false);
 const selectedDeviceToAdd = ref(null);
 const deviceLabel = ref('');
 const deviceUPosition = ref(1);
+
+// Add chassis form
+const chassisType = ref('predefined');
+const selectedPredefinedChassis = ref(null);
+const customChassisName = ref('');
+const customChassisManufacturer = ref('');
+const customChassisHeight = ref(6);
+const customChassisColumns = ref(4);
+const customChassisRows = ref(2);
+const chassisLabel = ref('');
+const chassisUPosition = ref(1);
 
 // Chassis slot management
 const selectedChassis = ref(null);
@@ -652,14 +821,29 @@ const bladeDevices = computed(() => {
   return availableDevices.value.filter(device => device.deviceType === 'blade');
 });
 
+const predefinedChassis = computed(() => {
+  return availableDevices.value.filter(device => device.deviceType === 'chassis');
+});
+
 const shareUrl = computed(() => {
   const state = encodeRackState();
   return `${window.location.origin}${window.location.pathname}?rack=${state}`;
 });
 
 const canAddDevice = computed(() => {
-  return selectedDeviceToAdd.value && deviceUPosition.value && 
+  return selectedDeviceToAdd.value && deviceUPosition.value &&
          canPlaceDevice(deviceUPosition.value, selectedDeviceToAdd.value.uHeight);
+});
+
+const canAddChassis = computed(() => {
+  if (chassisType.value === 'predefined') {
+    return selectedPredefinedChassis.value && chassisUPosition.value &&
+           canPlaceDevice(chassisUPosition.value, selectedPredefinedChassis.value.uHeight);
+  } else {
+    return customChassisName.value && customChassisManufacturer.value &&
+           customChassisHeight.value && chassisUPosition.value &&
+           canPlaceDevice(chassisUPosition.value, customChassisHeight.value);
+  }
 });
 
 // Methods
@@ -793,10 +977,24 @@ function handleDrop(event, u) {
 
 function getDeviceStyle(device) {
   if (!device) return {};
-  
+
   return {
     height: `${device.uHeight * 100}%`,
   };
+}
+
+function getChassisGridStyle(chassis) {
+  if (!chassis.slots) return {};
+
+  // If custom chassis with columns defined, use exact column count
+  if (chassis.slots.columns) {
+    return {
+      gridTemplateColumns: `repeat(${chassis.slots.columns}, 1fr)`
+    };
+  }
+
+  // Default: auto-fill with minimum 40px slots
+  return {};
 }
 
 function selectDevice(device) {
@@ -862,6 +1060,62 @@ function addDeviceToRack() {
   selectedDeviceToAdd.value = null;
   deviceLabel.value = '';
   deviceUPosition.value = 1;
+}
+
+function addChassisToRack() {
+  if (!canAddChassis.value) return;
+
+  let chassisDevice;
+
+  if (chassisType.value === 'predefined') {
+    // Use predefined chassis
+    chassisDevice = {
+      ...selectedPredefinedChassis.value,
+      instanceId: Date.now() + Math.random(),
+      position: chassisUPosition.value,
+      label: chassisLabel.value || selectedPredefinedChassis.value.name,
+      children: []
+    };
+  } else {
+    // Create custom chassis
+    const totalSlots = customChassisColumns.value * customChassisRows.value;
+    chassisDevice = {
+      id: `custom-chassis-${Date.now()}`,
+      name: customChassisName.value,
+      manufacturer: customChassisManufacturer.value,
+      model: 'Custom',
+      uHeight: customChassisHeight.value,
+      deviceType: 'chassis',
+      slots: {
+        count: totalSlots,
+        layout: 'vertical',
+        accepts: ['blade'],
+        columns: customChassisColumns.value,
+        rows: customChassisRows.value
+      },
+      image: null,
+      instanceId: Date.now() + Math.random(),
+      position: chassisUPosition.value,
+      label: chassisLabel.value || customChassisName.value,
+      children: []
+    };
+  }
+
+  installedDevices.value.push(chassisDevice);
+  emit('device-added', { device: chassisDevice, devices: installedDevices.value });
+  updateRackState();
+
+  // Reset form
+  showAddChassisDialog.value = false;
+  chassisType.value = 'predefined';
+  selectedPredefinedChassis.value = null;
+  customChassisName.value = '';
+  customChassisManufacturer.value = '';
+  customChassisHeight.value = 6;
+  customChassisColumns.value = 4;
+  customChassisRows.value = 2;
+  chassisLabel.value = '';
+  chassisUPosition.value = 1;
 }
 
 function clearRack() {
