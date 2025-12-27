@@ -1591,6 +1591,14 @@ canvas {
   flex-direction: column;
   padding: 4px;
   height: 100%;
+  /* Allow drag events to pass through chassis body to underlying rack units */
+  pointer-events: none;
+}
+
+/* Re-enable pointer events for interactive parts of chassis */
+.installed-device.is-chassis .device-main-display,
+.installed-device.is-chassis .chassis-slot {
+  pointer-events: auto;
 }
 
 .device-main-display {
