@@ -932,7 +932,10 @@ function handleDragOver(event, u) {
   isDragOver.value = true;
   dropTargetU.value = u;
 
-  if (canDropAtPosition(u)) {
+  const canDrop = canDropAtPosition(u);
+  console.log(`DragOver U${u}: canDrop=${canDrop}`);
+
+  if (canDrop) {
     event.dataTransfer.dropEffect = draggedInstalledDevice.value ? 'move' : 'copy';
   } else {
     event.dataTransfer.dropEffect = 'none';
