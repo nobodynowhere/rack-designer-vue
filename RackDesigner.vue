@@ -980,11 +980,23 @@ function handleDrop(event, u) {
   event.preventDefault();
   isDragOver.value = false;
 
+  console.log(`=== handleDrop at U${u} ===`);
+
   // Handle repositioning of installed device
   if (draggedInstalledDevice.value && canDropAtPosition(u)) {
     const device = draggedInstalledDevice.value;
     const oldPosition = device.position;
-    const newPosition = u;
+
+    // Calculate bottom U: when user drops at U (which renders the device there),
+    // the device extends downward. So U is the TOP, and bottom = U - height + 1
+    const newBottomU = u - device.uHeight + 1;
+    const newPosition = newBottomU;
+
+    console.log(`Repositioning device: ${device.label}`);
+    console.log(`Device height: ${device.uHeight}U`);
+    console.log(`Dropped at U${u}, calculated bottom position: U${newBottomU}`);
+    console.log(`Old position: ${oldPosition} (occupied U${oldPosition}-U${oldPosition + device.uHeight - 1})`);
+    console.log(`New position: ${newPosition} (will occupy U${newPosition}-U${newPosition + device.uHeight - 1})`);
 
     // Update the device position
     device.position = newPosition;
@@ -999,10 +1011,19 @@ function handleDrop(event, u) {
 
   // Handle adding new device from library
   if (draggedDevice.value && canDropAtPosition(u)) {
+    // Calculate bottom U: when user drops at U (which renders the device there),
+    // the device extends downward. So U is the TOP, and bottom = U - height + 1
+    const bottomU = u - draggedDevice.value.uHeight + 1;
+
+    console.log(`Adding new device: ${draggedDevice.value.name}`);
+    console.log(`Device height: ${draggedDevice.value.uHeight}U`);
+    console.log(`Dropped at U${u}, calculated bottom position: U${bottomU}`);
+    console.log(`Will occupy U${bottomU}-U${bottomU + draggedDevice.value.uHeight - 1}`);
+
     const device = {
       ...draggedDevice.value,
       instanceId: Date.now() + Math.random(),
-      position: u,
+      position: bottomU,
       label: draggedDevice.value.name,
       // Initialize children array for chassis devices
       children: draggedDevice.value.deviceType === 'chassis' ? [] : undefined
