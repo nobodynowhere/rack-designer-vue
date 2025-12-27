@@ -917,11 +917,8 @@ function canPlaceDevice(position, height) {
 
 function canPlaceDeviceForReposition(position, device) {
   const topU = position + device.uHeight - 1;
-  console.log(`Checking position ${position}: would occupy U${position}-U${topU}`);
-  console.log(`  Moving device: ${device.label || device.name} (current position: U${device.position}, instanceId: ${device.instanceId})`);
 
   if (position < 1 || topU > rackHeight.value) {
-    console.log(`  ❌ Out of bounds (rack height: ${rackHeight.value})`);
     return false;
   }
 
@@ -935,17 +932,12 @@ function canPlaceDeviceForReposition(position, device) {
     });
 
     if (deviceAtU) {
-      console.log(`  U${u}: Found ${deviceAtU.label || deviceAtU.name} (U${deviceAtU.position}-U${deviceAtU.position + deviceAtU.uHeight - 1}, instanceId: ${deviceAtU.instanceId})`);
-      if (deviceAtU.instanceId === device.instanceId) {
-        console.log(`    → Same device, ignoring`);
-      } else {
-        console.log(`    → Different device, BLOCKING`);
+      if (deviceAtU.instanceId !== device.instanceId) {
         return false;
       }
     }
   }
 
-  console.log(`  ✅ Valid`);
   return true;
 }
 
@@ -970,7 +962,6 @@ function handleDragOver(event, u) {
   dropTargetU.value = u;
 
   const canDrop = canDropAtPosition(u);
-  console.log(`DragOver U${u}: canDrop=${canDrop}`);
 
   if (canDrop) {
     event.dataTransfer.dropEffect = draggedInstalledDevice.value ? 'move' : 'copy';
@@ -988,8 +979,6 @@ function handleDrop(event, u) {
   event.preventDefault();
   isDragOver.value = false;
 
-  console.log(`=== handleDrop at U${u} ===`);
-
   // Handle repositioning of installed device
   if (draggedInstalledDevice.value && canDropAtPosition(u)) {
     const device = draggedInstalledDevice.value;
@@ -999,12 +988,6 @@ function handleDrop(event, u) {
     // the device extends downward. So U is the TOP, and bottom = U - height + 1
     const newBottomU = u - device.uHeight + 1;
     const newPosition = newBottomU;
-
-    console.log(`Repositioning device: ${device.label}`);
-    console.log(`Device height: ${device.uHeight}U`);
-    console.log(`Dropped at U${u}, calculated bottom position: U${newBottomU}`);
-    console.log(`Old position: ${oldPosition} (occupied U${oldPosition}-U${oldPosition + device.uHeight - 1})`);
-    console.log(`New position: ${newPosition} (will occupy U${newPosition}-U${newPosition + device.uHeight - 1})`);
 
     // Update the device position
     device.position = newPosition;
@@ -1022,11 +1005,6 @@ function handleDrop(event, u) {
     // Calculate bottom U: when user drops at U (which renders the device there),
     // the device extends downward. So U is the TOP, and bottom = U - height + 1
     const bottomU = u - draggedDevice.value.uHeight + 1;
-
-    console.log(`Adding new device: ${draggedDevice.value.name}`);
-    console.log(`Device height: ${draggedDevice.value.uHeight}U`);
-    console.log(`Dropped at U${u}, calculated bottom position: U${bottomU}`);
-    console.log(`Will occupy U${bottomU}-U${bottomU + draggedDevice.value.uHeight - 1}`);
 
     const device = {
       ...draggedDevice.value,
@@ -1076,21 +1054,11 @@ function getChassisGridStyle(chassis) {
 }
 
 function selectDevice(device) {
-  console.log('=== selectDevice called ===');
-  console.log('Device:', device);
-  console.log('Device type:', device?.deviceType);
-  console.log('Device label:', device?.label);
-  console.log('Before - showDeviceProperties:', showDeviceProperties.value);
   selectedDevice.value = device;
   showDeviceProperties.value = true;
-  console.log('After - showDeviceProperties:', showDeviceProperties.value);
-  console.log('After - selectedDevice:', selectedDevice.value);
 }
 
 function handleDeviceDoubleClick(event, device) {
-  console.log('=== Double-click detected ===');
-  console.log('Event target:', event.target);
-  console.log('Device:', device);
   selectDevice(device);
 }
 
@@ -1422,28 +1390,6 @@ function updateRackState() {
   window.history.replaceState({}, '', url.toString());
 }
 
-// Migration function to fix devices with incorrect positions
-function fixDevicePositions() {
-  // This fixes devices that were created with the old logic where position was stored as TOP U
-  // New logic: position should be BOTTOM U
-  // If a device appears to be rendered at the wrong location, recalculate its position
-
-  installedDevices.value.forEach(device => {
-    // For a device to be displayed correctly with the current rendering logic:
-    // - It renders at rack-unit matching device.position
-    // - With top: 0, it extends upward (in column-reverse, toward higher U numbers)
-    // - But we want position to be BOTTOM U, so the device at U1 with 10U height should have position: 1
-
-    // The old bug: position was being set as the TOP U where user dropped
-    // Example: user dropped at U10, old code set position: 10, device renders at U10 and extends to U19
-    // But user expected it at U1-U10, so we need to fix position to be: 10 - 10 + 1 = 1
-
-    // However, we can't auto-detect which devices need fixing without more info
-    // So instead, we'll just log a warning for now
-    console.log(`Device ${device.label}: position ${device.position}, occupies U${device.position}-U${device.position + device.uHeight - 1}`);
-  });
-}
-
 // Lifecycle
 onMounted(() => {
   // Load state from URL if present
@@ -1453,9 +1399,6 @@ onMounted(() => {
   if (rackState) {
     decodeRackState(rackState);
   }
-
-  // Log device positions for debugging
-  fixDevicePositions();
 });
 
 watch(showShareDialog, (visible) => {
