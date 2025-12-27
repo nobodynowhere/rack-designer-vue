@@ -184,7 +184,12 @@
                                 <i :class="getDeviceAtPosition(u).deviceType === 'chassis' ? 'pi pi-th-large' : 'pi pi-server'" />
                               </div>
                               <div class="installed-device-info">
-                                <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
+                                <div class="device-text-info">
+                                  <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
+                                  <span class="device-position-label">
+                                    U{{ getDeviceAtPosition(u).position }} - U{{ getDeviceAtPosition(u).position + getDeviceAtPosition(u).uHeight - 1 }}
+                                  </span>
+                                </div>
                                 <Button
                                   icon="pi pi-times"
                                   text
@@ -1417,15 +1422,40 @@ function updateRackState() {
   window.history.replaceState({}, '', url.toString());
 }
 
+// Migration function to fix devices with incorrect positions
+function fixDevicePositions() {
+  // This fixes devices that were created with the old logic where position was stored as TOP U
+  // New logic: position should be BOTTOM U
+  // If a device appears to be rendered at the wrong location, recalculate its position
+
+  installedDevices.value.forEach(device => {
+    // For a device to be displayed correctly with the current rendering logic:
+    // - It renders at rack-unit matching device.position
+    // - With top: 0, it extends upward (in column-reverse, toward higher U numbers)
+    // - But we want position to be BOTTOM U, so the device at U1 with 10U height should have position: 1
+
+    // The old bug: position was being set as the TOP U where user dropped
+    // Example: user dropped at U10, old code set position: 10, device renders at U10 and extends to U19
+    // But user expected it at U1-U10, so we need to fix position to be: 10 - 10 + 1 = 1
+
+    // However, we can't auto-detect which devices need fixing without more info
+    // So instead, we'll just log a warning for now
+    console.log(`Device ${device.label}: position ${device.position}, occupies U${device.position}-U${device.position + device.uHeight - 1}`);
+  });
+}
+
 // Lifecycle
 onMounted(() => {
   // Load state from URL if present
   const urlParams = new URLSearchParams(window.location.search);
   const rackState = urlParams.get('rack');
-  
+
   if (rackState) {
     decodeRackState(rackState);
   }
+
+  // Log device positions for debugging
+  fixDevicePositions();
 });
 
 watch(showShareDialog, (visible) => {
@@ -1611,14 +1641,27 @@ watch(showShareDialog, (visible) => {
 .installed-device-info {
   flex: 1;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   color: white;
 }
 
+.device-text-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .device-label {
   font-weight: 600;
   font-size: 14px;
+}
+
+.device-position-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 
 .remove-btn {
