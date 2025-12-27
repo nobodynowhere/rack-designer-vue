@@ -2,35 +2,68 @@
  * Type definitions for Rack Designer Component
  */
 
+/** Device type discriminator */
+export type DeviceType = 'standard' | 'chassis' | 'blade';
+
+/** Slot configuration for chassis devices */
+export interface SlotConfiguration {
+  /** Total number of slots in the chassis */
+  count: number;
+
+  /** Layout orientation of slots */
+  layout: 'vertical' | 'horizontal';
+
+  /** What device types can be installed in these slots */
+  accepts: DeviceType[];
+}
+
 export interface Device {
   /** Unique identifier for the device type */
   id: string;
-  
+
   /** Display name of the device */
   name: string;
-  
+
   /** Manufacturer name */
   manufacturer: string;
-  
+
   /** Model number/name */
   model: string;
-  
+
   /** Height in rack units (U) */
   uHeight: number;
-  
+
   /** Optional image URL for device visualization */
   image?: string | null;
+
+  /** Type of device (standard, chassis, or blade) */
+  deviceType?: DeviceType;
+
+  /** Slot configuration (only for chassis devices) */
+  slots?: SlotConfiguration;
+
+  /** Number of chassis slots this device occupies (only for blade devices) */
+  slotHeight?: number;
 }
 
 export interface InstalledDevice extends Device {
   /** Unique instance identifier for this installed device */
   instanceId: number | string;
-  
-  /** Position in rack (U number from bottom) */
-  position: number;
-  
+
+  /** Position in rack (U number from bottom) - only for rack-mounted devices */
+  position?: number;
+
   /** Custom label for this device instance */
   label: string;
+
+  /** Parent chassis instance ID (only for blade devices) */
+  parentId?: number | string;
+
+  /** Slot number within parent chassis (only for blade devices) */
+  slot?: number;
+
+  /** Child devices installed in this chassis (only for chassis devices) */
+  children?: InstalledDevice[];
 }
 
 export interface RackState {

@@ -154,28 +154,49 @@
                           class="installed-device"
                           :style="getDeviceStyle(getDeviceAtPosition(u))"
                           @click="selectDevice(getDeviceAtPosition(u))"
-                          :class="{ 'selected': selectedDevice?.instanceId === getDeviceAtPosition(u)?.instanceId }"
+                          :class="{
+                            'selected': selectedDevice?.instanceId === getDeviceAtPosition(u)?.instanceId,
+                            'is-chassis': getDeviceAtPosition(u).deviceType === 'chassis'
+                          }"
                         >
-                          <img
-                            v-if="getDeviceAtPosition(u).image"
-                            :src="getDeviceAtPosition(u).image"
-                            :alt="getDeviceAtPosition(u).name"
-                            class="installed-device-image"
-                          />
-                          <div v-else class="installed-device-placeholder">
-                            <i class="pi pi-server" />
-                          </div>
-                          <div class="installed-device-info">
-                            <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
-                            <Button
-                              icon="pi pi-times"
-                              text
-                              rounded
-                              severity="danger"
-                              size="small"
-                              class="remove-btn"
-                              @click.stop="removeDevice(getDeviceAtPosition(u))"
+                          <div class="device-main-display">
+                            <img
+                              v-if="getDeviceAtPosition(u).image"
+                              :src="getDeviceAtPosition(u).image"
+                              :alt="getDeviceAtPosition(u).name"
+                              class="installed-device-image"
                             />
+                            <div v-else class="installed-device-placeholder">
+                              <i :class="getDeviceAtPosition(u).deviceType === 'chassis' ? 'pi pi-th-large' : 'pi pi-server'" />
+                            </div>
+                            <div class="installed-device-info">
+                              <span class="device-label">{{ getDeviceAtPosition(u).label || getDeviceAtPosition(u).name }}</span>
+                              <Button
+                                icon="pi pi-times"
+                                text
+                                rounded
+                                severity="danger"
+                                size="small"
+                                class="remove-btn"
+                                @click.stop="removeDevice(getDeviceAtPosition(u))"
+                              />
+                            </div>
+                          </div>
+
+                          <!-- Chassis slot display -->
+                          <div v-if="getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots" class="chassis-slots">
+                            <div
+                              v-for="slot in getDeviceAtPosition(u).slots.count"
+                              :key="`slot-${slot}`"
+                              class="chassis-slot"
+                              :class="{ 'slot-occupied': getBladeInSlot(getDeviceAtPosition(u), slot) }"
+                              @click.stop="openChassisSlotDialog(getDeviceAtPosition(u), slot)"
+                            >
+                              <span class="slot-number">{{ slot }}</span>
+                              <span v-if="getBladeInSlot(getDeviceAtPosition(u), slot)" class="slot-label">
+                                {{ getBladeInSlot(getDeviceAtPosition(u), slot).label }}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </template>
@@ -275,6 +296,67 @@
           <p class="text-muted mt-2">Scan QR code to open on mobile</p>
         </div>
       </div>
+    </Dialog>
+
+    <!-- Chassis Slot Management Dialog -->
+    <Dialog
+      v-model:visible="showChassisSlotDialog"
+      :header="`Manage Chassis Slot ${selectedSlot}`"
+      :modal="true"
+      :style="{ width: '50vw' }"
+    >
+      <div v-if="selectedChassis" class="chassis-slot-form">
+        <div class="mb-3">
+          <p><strong>Chassis:</strong> {{ selectedChassis.label || selectedChassis.name }}</p>
+          <p><strong>Slot:</strong> {{ selectedSlot }} / {{ selectedChassis.slots?.count }}</p>
+        </div>
+
+        <div class="mb-3">
+          <label for="blade-select" class="form-label">Select Blade Server</label>
+          <Dropdown
+            id="blade-select"
+            v-model="selectedBladeToAdd"
+            :options="bladeDevices"
+            optionLabel="name"
+            placeholder="Choose a blade server"
+            class="w-100"
+            filter
+          >
+            <template #option="slotProps">
+              <div class="d-flex align-items-center gap-2">
+                <span>{{ slotProps.option.name }}</span>
+                <Tag :value="slotProps.option.manufacturer" severity="info" />
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+
+        <div class="mb-3">
+          <label for="blade-label" class="form-label">Blade Label</label>
+          <InputText
+            id="blade-label"
+            v-model="bladeLabel"
+            placeholder="e.g., Web Server 1"
+            class="w-100"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          v-if="getBladeInSlot(selectedChassis, selectedSlot)"
+          label="Remove Blade"
+          @click="removeBladeFromSlot"
+          severity="danger"
+          class="me-2"
+        />
+        <Button label="Cancel" @click="showChassisSlotDialog = false" severity="secondary" />
+        <Button
+          label="Add/Update"
+          @click="addBladeToSlot"
+          :disabled="!selectedBladeToAdd"
+        />
+      </template>
     </Dialog>
 
     <!-- Device Properties Panel -->
@@ -380,11 +462,18 @@ const dropTargetU = ref(null);
 const showAddDeviceDialog = ref(false);
 const showShareDialog = ref(false);
 const showDeviceProperties = ref(false);
+const showChassisSlotDialog = ref(false);
 
 // Add device form
 const selectedDeviceToAdd = ref(null);
 const deviceLabel = ref('');
 const deviceUPosition = ref(1);
+
+// Chassis slot management
+const selectedChassis = ref(null);
+const selectedSlot = ref(null);
+const selectedBladeToAdd = ref(null);
+const bladeLabel = ref('');
 
 // Refs
 const rackElement = ref(null);
@@ -399,6 +488,7 @@ const defaultDevices = [
     manufacturer: 'Dell',
     model: 'R740',
     uHeight: 2,
+    deviceType: 'standard',
     image: null, // Would have actual image URL
   },
   {
@@ -407,6 +497,7 @@ const defaultDevices = [
     manufacturer: 'HP',
     model: 'DL380 Gen10',
     uHeight: 2,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -415,6 +506,7 @@ const defaultDevices = [
     manufacturer: 'Cisco',
     model: 'C9300-48P',
     uHeight: 1,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -423,6 +515,7 @@ const defaultDevices = [
     manufacturer: 'Synology',
     model: 'RS2421+',
     uHeight: 2,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -431,6 +524,7 @@ const defaultDevices = [
     manufacturer: 'APC',
     model: 'SMT3000RM2U',
     uHeight: 2,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -439,6 +533,7 @@ const defaultDevices = [
     manufacturer: 'Ubiquiti',
     model: 'UDM-Pro',
     uHeight: 1,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -447,6 +542,7 @@ const defaultDevices = [
     manufacturer: 'Dell',
     model: 'R640',
     uHeight: 1,
+    deviceType: 'standard',
     image: null,
   },
   {
@@ -455,6 +551,81 @@ const defaultDevices = [
     manufacturer: 'Supermicro',
     model: '6028R-TRT',
     uHeight: 2,
+    deviceType: 'standard',
+    image: null,
+  },
+  // Chassis devices
+  {
+    id: 'chassis-1',
+    name: 'Dell PowerEdge M1000e',
+    manufacturer: 'Dell',
+    model: 'M1000e',
+    uHeight: 10,
+    deviceType: 'chassis',
+    slots: {
+      count: 16,
+      layout: 'vertical',
+      accepts: ['blade']
+    },
+    image: null,
+  },
+  {
+    id: 'chassis-2',
+    name: 'Cisco UCS 5108',
+    manufacturer: 'Cisco',
+    model: 'UCS 5108',
+    uHeight: 6,
+    deviceType: 'chassis',
+    slots: {
+      count: 8,
+      layout: 'vertical',
+      accepts: ['blade']
+    },
+    image: null,
+  },
+  {
+    id: 'chassis-3',
+    name: 'HP BladeSystem c7000',
+    manufacturer: 'HP',
+    model: 'c7000',
+    uHeight: 10,
+    deviceType: 'chassis',
+    slots: {
+      count: 16,
+      layout: 'vertical',
+      accepts: ['blade']
+    },
+    image: null,
+  },
+  // Blade devices
+  {
+    id: 'blade-1',
+    name: 'Dell PowerEdge M630',
+    manufacturer: 'Dell',
+    model: 'M630',
+    uHeight: 0, // Blades don't occupy rack U
+    deviceType: 'blade',
+    slotHeight: 1,
+    image: null,
+  },
+  {
+    id: 'blade-2',
+    name: 'Cisco UCS B200 M5',
+    manufacturer: 'Cisco',
+    model: 'B200 M5',
+    uHeight: 0,
+    deviceType: 'blade',
+    slotHeight: 1,
+    image: null,
+  },
+  {
+    id: 'blade-3',
+    name: 'HP ProLiant BL460c Gen10',
+    manufacturer: 'HP',
+    model: 'BL460c Gen10',
+    uHeight: 0,
+    deviceType: 'blade',
+    slotHeight: 1,
     image: null,
   },
 ];
@@ -464,13 +635,17 @@ const availableDevices = ref(props.deviceLibrary || defaultDevices);
 // Computed
 const filteredDevices = computed(() => {
   if (!deviceSearchQuery.value) return availableDevices.value;
-  
+
   const query = deviceSearchQuery.value.toLowerCase();
   return availableDevices.value.filter(device =>
     device.name.toLowerCase().includes(query) ||
     device.manufacturer.toLowerCase().includes(query) ||
     device.model.toLowerCase().includes(query)
   );
+});
+
+const bladeDevices = computed(() => {
+  return availableDevices.value.filter(device => device.deviceType === 'blade');
 });
 
 const shareUrl = computed(() => {
@@ -548,6 +723,8 @@ function handleDrop(event, u) {
       instanceId: Date.now() + Math.random(),
       position: u,
       label: draggedDevice.value.name,
+      // Initialize children array for chassis devices
+      children: draggedDevice.value.deviceType === 'chassis' ? [] : undefined
     };
 
     installedDevices.value.push(device);
@@ -617,6 +794,8 @@ function addDeviceToRack() {
     instanceId: Date.now() + Math.random(),
     position: deviceUPosition.value,
     label: deviceLabel.value || selectedDeviceToAdd.value.name,
+    // Initialize children array for chassis devices
+    children: selectedDeviceToAdd.value.deviceType === 'chassis' ? [] : undefined
   };
 
   installedDevices.value.push(device);
@@ -644,6 +823,82 @@ function editRackName() {
     rackName.value = newName;
     updateRackState();
   }
+}
+
+// Chassis management functions
+function getBladeInSlot(chassis, slotNumber) {
+  if (!chassis.children) return null;
+  return chassis.children.find(blade => blade.slot === slotNumber);
+}
+
+function openChassisSlotDialog(chassis, slotNumber) {
+  selectedChassis.value = chassis;
+  selectedSlot.value = slotNumber;
+
+  const existingBlade = getBladeInSlot(chassis, slotNumber);
+  if (existingBlade) {
+    // Slot is occupied, allow editing
+    selectedBladeToAdd.value = availableDevices.value.find(d => d.id === existingBlade.id);
+    bladeLabel.value = existingBlade.label;
+  } else {
+    // Empty slot
+    selectedBladeToAdd.value = null;
+    bladeLabel.value = '';
+  }
+
+  showChassisSlotDialog.value = true;
+}
+
+function addBladeToSlot() {
+  if (!selectedChassis.value || !selectedBladeToAdd.value || !selectedSlot.value) return;
+
+  const chassis = installedDevices.value.find(d => d.instanceId === selectedChassis.value.instanceId);
+  if (!chassis || !chassis.children) return;
+
+  // Remove existing blade in this slot if any
+  const existingIndex = chassis.children.findIndex(b => b.slot === selectedSlot.value);
+  if (existingIndex !== -1) {
+    chassis.children.splice(existingIndex, 1);
+  }
+
+  // Add new blade
+  const blade = {
+    ...selectedBladeToAdd.value,
+    instanceId: Date.now() + Math.random(),
+    parentId: chassis.instanceId,
+    slot: selectedSlot.value,
+    label: bladeLabel.value || selectedBladeToAdd.value.name,
+  };
+
+  chassis.children.push(blade);
+  updateRackState();
+
+  // Close dialog
+  showChassisSlotDialog.value = false;
+  selectedChassis.value = null;
+  selectedSlot.value = null;
+  selectedBladeToAdd.value = null;
+  bladeLabel.value = '';
+}
+
+function removeBladeFromSlot() {
+  if (!selectedChassis.value || !selectedSlot.value) return;
+
+  const chassis = installedDevices.value.find(d => d.instanceId === selectedChassis.value.instanceId);
+  if (!chassis || !chassis.children) return;
+
+  const bladeIndex = chassis.children.findIndex(b => b.slot === selectedSlot.value);
+  if (bladeIndex !== -1) {
+    chassis.children.splice(bladeIndex, 1);
+    updateRackState();
+  }
+
+  // Close dialog
+  showChassisSlotDialog.value = false;
+  selectedChassis.value = null;
+  selectedSlot.value = null;
+  selectedBladeToAdd.value = null;
+  bladeLabel.value = '';
 }
 
 async function exportToPNG() {
@@ -1000,20 +1255,91 @@ canvas {
   border-radius: 4px;
 }
 
+/* Chassis Styles */
+.installed-device.is-chassis {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.device-main-display {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  min-height: 36px;
+}
+
+.chassis-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.chassis-slot {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  padding: 4px;
+  min-height: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+
+.chassis-slot:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.chassis-slot.slot-occupied {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.slot-number {
+  font-weight: 600;
+  color: white;
+  font-size: 10px;
+}
+
+.slot-label {
+  color: white;
+  font-size: 9px;
+  text-align: center;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;
   }
-  
+
   .rack-container .row {
     flex-direction: column;
   }
-  
+
   .rack-container .col-md-3,
   .rack-container .col-md-9 {
     width: 100%;
     max-width: 100%;
+  }
+
+  .chassis-slots {
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
   }
 }
 </style>
