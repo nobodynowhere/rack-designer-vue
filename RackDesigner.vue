@@ -950,6 +950,31 @@ function handleInstalledDeviceDragStart(event, device) {
   draggedInstalledDevice.value = device;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/plain', device.instanceId);
+
+  // Create a custom drag image showing device info
+  const dragImage = document.createElement('div');
+  dragImage.style.cssText = `
+    position: absolute;
+    top: -1000px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid #5a67d8;
+    border-radius: 4px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  `;
+  dragImage.textContent = `${device.label || device.name} (${device.uHeight}U)`;
+  document.body.appendChild(dragImage);
+
+  event.dataTransfer.setDragImage(dragImage, 0, 0);
+
+  // Clean up after a short delay
+  setTimeout(() => {
+    document.body.removeChild(dragImage);
+  }, 0);
 }
 
 function handleInstalledDeviceDragEnd() {
