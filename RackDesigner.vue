@@ -147,7 +147,7 @@
                     @dragleave="handleDragLeave"
                     @drop="handleDrop($event, u)"
                   >
-                    <div class="u-label">U{{ rackHeight - u + 1 }}</div>
+                    <div class="u-label">U{{ u }}</div>
                     <div class="u-content">
                       <template v-if="getDeviceAtPosition(u)">
                         <div
