@@ -152,8 +152,11 @@
                       <template v-if="getDeviceAtPosition(u)">
                         <div
                           class="installed-device"
+                          draggable="true"
                           :style="getDeviceStyle(getDeviceAtPosition(u))"
                           @click="selectDevice(getDeviceAtPosition(u))"
+                          @dragstart="handleInstalledDeviceDragStart($event, getDeviceAtPosition(u))"
+                          @dragend="handleInstalledDeviceDragEnd"
                           :class="{
                             'selected': selectedDevice?.instanceId === getDeviceAtPosition(u)?.instanceId,
                             'is-chassis': getDeviceAtPosition(u).deviceType === 'chassis'
@@ -456,6 +459,7 @@ const selectedDevice = ref(null);
 const deviceSearchQuery = ref('');
 const isDragOver = ref(false);
 const draggedDevice = ref(null);
+const draggedInstalledDevice = ref(null);
 const dropTargetU = ref(null);
 
 // Dialogs
@@ -672,22 +676,44 @@ function getDeviceAtPosition(u) {
 }
 
 function canDropAtPosition(u) {
-  if (!draggedDevice.value) return false;
-  return canPlaceDevice(u, draggedDevice.value.uHeight);
+  if (draggedInstalledDevice.value) {
+    // When repositioning an installed device
+    return canPlaceDeviceForReposition(u, draggedInstalledDevice.value);
+  } else if (draggedDevice.value) {
+    // When adding from library
+    return canPlaceDevice(u, draggedDevice.value.uHeight);
+  }
+  return false;
 }
 
 function canPlaceDevice(position, height) {
   if (position < 1 || position + height - 1 > rackHeight.value) {
     return false;
   }
-  
+
   // Check for overlaps
   for (let u = position; u < position + height; u++) {
     if (isUnitOccupied(u)) {
       return false;
     }
   }
-  
+
+  return true;
+}
+
+function canPlaceDeviceForReposition(position, device) {
+  if (position < 1 || position + device.uHeight - 1 > rackHeight.value) {
+    return false;
+  }
+
+  // Check for overlaps, but ignore the device being moved
+  for (let u = position; u < position + device.uHeight; u++) {
+    const deviceAtU = getDeviceAtPosition(u);
+    if (deviceAtU && deviceAtU.instanceId !== device.instanceId) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -696,13 +722,23 @@ function handleDragStart(event, device) {
   event.dataTransfer.effectAllowed = 'copy';
 }
 
+function handleInstalledDeviceDragStart(event, device) {
+  draggedInstalledDevice.value = device;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', device.instanceId);
+}
+
+function handleInstalledDeviceDragEnd() {
+  draggedInstalledDevice.value = null;
+}
+
 function handleDragOver(event, u) {
   event.preventDefault();
   isDragOver.value = true;
   dropTargetU.value = u;
-  
+
   if (canDropAtPosition(u)) {
-    event.dataTransfer.dropEffect = 'copy';
+    event.dataTransfer.dropEffect = draggedInstalledDevice.value ? 'move' : 'copy';
   } else {
     event.dataTransfer.dropEffect = 'none';
   }
@@ -717,6 +753,24 @@ function handleDrop(event, u) {
   event.preventDefault();
   isDragOver.value = false;
 
+  // Handle repositioning of installed device
+  if (draggedInstalledDevice.value && canDropAtPosition(u)) {
+    const device = draggedInstalledDevice.value;
+    const oldPosition = device.position;
+    const newPosition = u;
+
+    // Update the device position
+    device.position = newPosition;
+
+    emit('device-moved', { device, oldPosition, newPosition, devices: installedDevices.value });
+    updateRackState();
+
+    draggedInstalledDevice.value = null;
+    dropTargetU.value = null;
+    return;
+  }
+
+  // Handle adding new device from library
   if (draggedDevice.value && canDropAtPosition(u)) {
     const device = {
       ...draggedDevice.value,
@@ -733,6 +787,7 @@ function handleDrop(event, u) {
   }
 
   draggedDevice.value = null;
+  draggedInstalledDevice.value = null;
   dropTargetU.value = null;
 }
 
@@ -1179,9 +1234,13 @@ watch(showShareDialog, (visible) => {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.2s;
   overflow: hidden;
+}
+
+.installed-device:active {
+  cursor: grabbing;
 }
 
 .installed-device:hover {
