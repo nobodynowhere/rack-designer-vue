@@ -1651,6 +1651,11 @@ canvas {
   margin-top: 0;
   padding-left: 160px;
   max-height: 100%;
+  pointer-events: none;
+}
+
+.device-main-display.compact-layout ~ .chassis-slots .chassis-slot {
+  pointer-events: auto;
 }
 
 .chassis-slot {
