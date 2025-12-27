@@ -1472,7 +1472,6 @@ watch(showShareDialog, (visible) => {
   border-bottom: 1px solid #546e7a;
   position: relative;
   transition: background-color 0.2s;
-  z-index: 1;
 }
 
 .rack-unit:last-child {
@@ -1500,10 +1499,9 @@ watch(showShareDialog, (visible) => {
 
 .installed-device {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  z-index: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid #5a67d8;
   border-radius: 4px;
