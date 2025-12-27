@@ -5,7 +5,7 @@
         <template #start>
           <h2 class="m-0">Rack Designer</h2>
         </template>
-        <template #center>
+        <template #end>
           <div class="d-flex gap-2">
             <Button
               label="Add Device"
@@ -45,7 +45,7 @@
             />
           </div>
         </template>
-        <template #end>
+        <template #center>
         </template>
       </Toolbar>
     </div>
