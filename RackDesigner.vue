@@ -46,25 +46,6 @@
           </div>
         </template>
         <template #end>
-          <div class="d-flex align-items-center gap-2">
-            <label for="rack-height">Rack Units:</label>
-            <InputNumber
-              id="rack-height"
-              v-model="rackHeight"
-              :min="10"
-              :max="52"
-              showButtons
-              buttonLayout="horizontal"
-              :step="1"
-            >
-              <template #incrementbuttonicon>
-                <span class="pi pi-plus" />
-              </template>
-              <template #decrementbuttonicon>
-                <span class="pi pi-minus" />
-              </template>
-            </InputNumber>
-          </div>
         </template>
       </Toolbar>
     </div>
@@ -568,8 +549,9 @@
           <h4>Device Information</h4>
           <p><strong>Name:</strong> {{ selectedDevice.name }}</p>
           <p><strong>Manufacturer:</strong> {{ selectedDevice.manufacturer }}</p>
-          <p><strong>Height:</strong> {{ selectedDevice.uHeight }}U</p>
           <p><strong>Model:</strong> {{ selectedDevice.model }}</p>
+          <p><strong>Height:</strong> {{ selectedDevice.uHeight }}U</p>
+          <p><strong>Rack Position:</strong> U{{ selectedDevice.position }} - U{{ selectedDevice.position + selectedDevice.uHeight - 1 }}</p>
         </div>
         
         <Divider />
@@ -583,6 +565,52 @@
         />
       </div>
     </Drawer>
+
+    <!-- Edit Rack Dialog -->
+    <Dialog
+      v-model:visible="showEditRackDialog"
+      header="Edit Rack Settings"
+      :modal="true"
+      :style="{ width: '400px' }"
+    >
+      <div class="edit-rack-form">
+        <div class="mb-3">
+          <label class="form-label">Rack Name</label>
+          <InputText
+            v-model="editRackNameValue"
+            class="w-100"
+            placeholder="Enter rack name"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Rack Height (U)</label>
+          <InputNumber
+            v-model="editRackHeightValue"
+            :min="10"
+            :max="52"
+            showButtons
+            class="w-100"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          label="Cancel"
+          icon="pi pi-times"
+          @click="cancelEditRack"
+          severity="secondary"
+          text
+        />
+        <Button
+          label="Save"
+          icon="pi pi-check"
+          @click="saveRackSettings"
+          severity="success"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -640,6 +668,11 @@ const showAddChassisDialog = ref(false);
 const showShareDialog = ref(false);
 const showDeviceProperties = ref(false);
 const showChassisSlotDialog = ref(false);
+const showEditRackDialog = ref(false);
+
+// Edit rack form
+const editRackNameValue = ref('');
+const editRackHeightValue = ref(42);
 
 // Add device form
 const selectedDeviceToAdd = ref(null);
@@ -1212,11 +1245,22 @@ function clearRack() {
 }
 
 function editRackName() {
-  const newName = prompt('Enter rack name:', rackName.value);
-  if (newName) {
-    rackName.value = newName;
-    updateRackState();
-  }
+  editRackNameValue.value = rackName.value;
+  editRackHeightValue.value = rackHeight.value;
+  showEditRackDialog.value = true;
+}
+
+function cancelEditRack() {
+  showEditRackDialog.value = false;
+  editRackNameValue.value = '';
+  editRackHeightValue.value = 42;
+}
+
+function saveRackSettings() {
+  rackName.value = editRackNameValue.value;
+  rackHeight.value = editRackHeightValue.value;
+  showEditRackDialog.value = false;
+  updateRackState();
 }
 
 // Chassis management functions
