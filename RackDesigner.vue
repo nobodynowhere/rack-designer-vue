@@ -152,6 +152,7 @@
                     @dragover="handleDragOver($event, u)"
                     @dragleave="handleDragLeave"
                     @drop="handleDrop($event, u)"
+                    @dblclick="getDeviceOccupyingPosition(u) && handleDeviceDoubleClick($event, getDeviceOccupyingPosition(u))"
                   >
                     <div class="u-label">U{{ u }}</div>
                     <div class="u-content">
@@ -863,13 +864,23 @@ function isUnitOccupied(u) {
 }
 
 function getDeviceAtPosition(u) {
+  // Returns device if this is the TOP U where device should be rendered
   // Position represents the BOTTOM U of the device (rack convention)
   // In column-reverse layout, devices render at their TOP U and extend downward visually
-  // So we need to find devices whose TOP U matches this rack unit
   // TOP U = position + uHeight - 1
   return installedDevices.value.find(device => {
     const topU = device.position + device.uHeight - 1;
     return topU === u;
+  });
+}
+
+function getDeviceOccupyingPosition(u) {
+  // Returns device if this U position is occupied by any part of the device
+  // Used for event handlers that should work across all occupied rack units
+  return installedDevices.value.find(device => {
+    const bottomU = device.position;
+    const topU = device.position + device.uHeight - 1;
+    return u >= bottomU && u <= topU;
   });
 }
 
