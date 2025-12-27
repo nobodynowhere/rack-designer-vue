@@ -1573,6 +1573,7 @@ canvas {
   display: flex;
   flex-direction: column;
   padding: 4px;
+  height: 100%;
 }
 
 .device-main-display {
@@ -1590,6 +1591,10 @@ canvas {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   margin-top: 4px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100% - 44px);
 }
 
 .chassis-slot {
