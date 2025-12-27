@@ -861,7 +861,14 @@ function isUnitOccupied(u) {
 }
 
 function getDeviceAtPosition(u) {
-  return installedDevices.value.find(device => device.position === u);
+  // Position represents the BOTTOM U of the device (rack convention)
+  // In column-reverse layout, devices render at their TOP U and extend downward visually
+  // So we need to find devices whose TOP U matches this rack unit
+  // TOP U = position + uHeight - 1
+  return installedDevices.value.find(device => {
+    const topU = device.position + device.uHeight - 1;
+    return topU === u;
+  });
 }
 
 function canDropAtPosition(u) {
@@ -1511,7 +1518,7 @@ watch(showShareDialog, (visible) => {
 
 .installed-device {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
