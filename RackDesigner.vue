@@ -1605,6 +1605,12 @@ canvas {
   justify-content: center;
   padding: 4px;
   z-index: 1;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.device-main-display.compact-layout:active {
+  cursor: grabbing;
 }
 
 .device-header {
