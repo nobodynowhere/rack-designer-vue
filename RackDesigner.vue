@@ -171,6 +171,7 @@
                           <div
                             class="device-main-display"
                             :class="{ 'compact-layout': getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots?.rows && getDeviceAtPosition(u).slots.rows > 1 }"
+                            @dblclick.stop="selectDevice(getDeviceAtPosition(u))"
                           >
                             <div class="device-header">
                               <img
