@@ -256,6 +256,34 @@ describe('Rack Device Positioning', () => {
       const device = installedDevices[0];
       expect(canPlaceDeviceForReposition(0, device)).toBe(false); // Below rack minimum
     });
+
+    it('should allow moving 2U device to gap between two other devices', () => {
+      // Setup: 2U device at U12-U13, 10U device at U24-U33
+      installedDevices = [
+        { position: 12, uHeight: 2, instanceId: 'server-1', label: '2U Server' },  // U12-U13
+        { position: 24, uHeight: 10, instanceId: 'chassis-1', label: '10U Chassis' }  // U24-U33
+      ];
+      rackHeight = 42;
+
+      const server = installedDevices[0];
+
+      // Test moving 2U server to various positions
+      expect(canPlaceDeviceForReposition(1, server)).toBe(true);   // U1-U2 (below current)
+      expect(canPlaceDeviceForReposition(10, server)).toBe(true);  // U10-U11 (overlaps U12 with itself)
+      expect(canPlaceDeviceForReposition(12, server)).toBe(true);  // U12-U13 (same position)
+      expect(canPlaceDeviceForReposition(14, server)).toBe(true);  // U14-U15 (above current)
+      expect(canPlaceDeviceForReposition(20, server)).toBe(true);  // U20-U21 (in the gap)
+
+      // Test moving to U22 - should fit in gap between U13 and U24
+      expect(canPlaceDeviceForReposition(22, server)).toBe(true);  // U22-U23 (fits in gap)
+
+      expect(canPlaceDeviceForReposition(23, server)).toBe(false); // U23-U24 (overlaps chassis at U24)
+      expect(canPlaceDeviceForReposition(24, server)).toBe(false); // U24-U25 (overlaps chassis)
+      expect(canPlaceDeviceForReposition(30, server)).toBe(false); // U30-U31 (overlaps chassis)
+      expect(canPlaceDeviceForReposition(34, server)).toBe(true);  // U34-U35 (above chassis)
+      expect(canPlaceDeviceForReposition(41, server)).toBe(true);  // U41-U42 (at top of rack)
+      expect(canPlaceDeviceForReposition(42, server)).toBe(false); // U42-U43 (exceeds rack)
+    });
   });
 
   describe('Position calculation from drop location', () => {
