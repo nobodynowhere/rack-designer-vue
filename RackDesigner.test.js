@@ -199,6 +199,44 @@ describe('Rack Device Positioning', () => {
       expect(canPlaceDeviceForReposition(33, device)).toBe(true);  // U33-U42 exactly fits
       expect(canPlaceDeviceForReposition(34, device)).toBe(false); // U34-U43 exceeds
     });
+
+    it('should correctly detect overlaps when repositioning with multiple devices', () => {
+      // Setup: 10U chassis at U3-U12, 2U server at U22-U23
+      installedDevices = [
+        { position: 3, uHeight: 10, instanceId: 'chassis-1', label: 'Dell PowerEdge M1000e' },  // U3-U12
+        { position: 22, uHeight: 2, instanceId: 'server-1', label: 'HP ProLiant' }              // U22-U23
+      ];
+      rackHeight = 42;
+
+      const chassis = installedDevices[0];
+
+      // Test moving chassis DOWN from U3
+      expect(canPlaceDeviceForReposition(1, chassis)).toBe(true);  // U1-U10 (valid, moves down)
+      expect(canPlaceDeviceForReposition(2, chassis)).toBe(true);  // U2-U11 (valid, moves down)
+
+      // Test keeping chassis at same position
+      expect(canPlaceDeviceForReposition(3, chassis)).toBe(true);  // U3-U12 (same position)
+
+      // Test moving chassis UP (but not into conflict)
+      expect(canPlaceDeviceForReposition(4, chassis)).toBe(true);   // U4-U13 (valid)
+      expect(canPlaceDeviceForReposition(10, chassis)).toBe(true);  // U10-U19 (valid)
+      expect(canPlaceDeviceForReposition(12, chassis)).toBe(true);  // U12-U21 (valid, just below HP)
+
+      // Test moving chassis into CONFLICT with HP server at U22-U23
+      expect(canPlaceDeviceForReposition(13, chassis)).toBe(false); // U13-U22 (overlaps HP at U22)
+      expect(canPlaceDeviceForReposition(14, chassis)).toBe(false); // U14-U23 (overlaps HP at U22-U23)
+      expect(canPlaceDeviceForReposition(15, chassis)).toBe(false); // U15-U24 (overlaps HP at U22-U23)
+      expect(canPlaceDeviceForReposition(20, chassis)).toBe(false); // U20-U29 (overlaps HP at U22-U23)
+      expect(canPlaceDeviceForReposition(22, chassis)).toBe(false); // U22-U31 (overlaps HP at U22-U23)
+
+      // Test moving chassis ABOVE the HP server
+      expect(canPlaceDeviceForReposition(24, chassis)).toBe(true);  // U24-U33 (valid, above HP)
+      expect(canPlaceDeviceForReposition(30, chassis)).toBe(true);  // U30-U39 (valid)
+      expect(canPlaceDeviceForReposition(33, chassis)).toBe(true);  // U33-U42 (valid, at top of rack)
+
+      // Test out of bounds
+      expect(canPlaceDeviceForReposition(34, chassis)).toBe(false); // U34-U43 (exceeds rack)
+    });
   });
 
   describe('Position calculation from drop location', () => {
