@@ -126,7 +126,7 @@
                     class="rack-unit"
                     :class="{
                       'occupied': isUnitOccupied(u),
-                      'drop-target': isDragOver && canDropAtPosition(u)
+                      'drop-target': shouldHighlightUnit(u)
                     }"
                     :data-u-position="u"
                     @dragover="handleDragOver($event, u)"
@@ -932,6 +932,33 @@ function canDropAtPosition(u) {
     return canPlaceDevice(u, draggedDevice.value.uHeight);
   }
   return false;
+}
+
+function shouldHighlightUnit(u) {
+  // Returns true if this unit should be highlighted during drag
+  // This highlights ALL units that would be occupied if dropped at dropTargetU
+  if (!isDragOver.value || !dropTargetU.value) {
+    return false;
+  }
+
+  const device = draggedInstalledDevice.value || draggedDevice.value;
+  if (!device) {
+    return false;
+  }
+
+  const deviceHeight = device.uHeight;
+
+  // Calculate bottom position if dropped at dropTargetU
+  const bottomU = dropTargetU.value - deviceHeight + 1;
+  const topU = dropTargetU.value;
+
+  // Check if this unit would be occupied
+  const wouldOccupy = u >= bottomU && u <= topU;
+
+  // Only highlight if the drop is valid
+  const isValidDrop = canDropAtPosition(dropTargetU.value);
+
+  return wouldOccupy && isValidDrop;
 }
 
 function canPlaceDevice(position, height) {
