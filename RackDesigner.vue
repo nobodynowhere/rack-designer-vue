@@ -197,7 +197,6 @@
                               :class="{ 'slot-occupied': getBladeInSlot(getDeviceAtPosition(u), slot) }"
                               :title="getBladeInSlot(getDeviceAtPosition(u), slot) ? `Slot ${slot}: ${getBladeInSlot(getDeviceAtPosition(u), slot).label}` : `Slot ${slot}: Empty`"
                               @click.stop="openChassisSlotDialog(getDeviceAtPosition(u), slot)"
-                              @dblclick.stop="handleDeviceDoubleClick($event, getDeviceAtPosition(u))"
                             >
                               <span class="slot-number">{{ slot }}</span>
                               <span v-if="getBladeInSlot(getDeviceAtPosition(u), slot)" class="slot-label">
@@ -1842,7 +1841,7 @@ canvas {
   display: grid;
   gap: 3px;
   padding: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
   border-radius: 4px;
   margin-top: 4px;
   flex: 1;
@@ -1854,8 +1853,8 @@ canvas {
   /* Higher z-index than drag overlays to ensure slots are clickable */
   position: relative;
   z-index: 2;
-  /* Allow drag events to pass through to parent for chassis dragging */
-  pointer-events: none;
+  /* Enable pointer events so hover and click work on child slots */
+  pointer-events: auto;
 }
 
 .device-main-display.compact-layout ~ .chassis-slots {
@@ -1865,9 +1864,9 @@ canvas {
 }
 
 .chassis-slot {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
   padding: 4px 3px;
   /* Use auto height to fit within grid space */
   min-height: 0;
@@ -1876,7 +1875,7 @@ canvas {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease-out;
   font-size: 9px;
   gap: 1px;
   /* Re-enable pointer events for individual slots so they're clickable and hoverable */
@@ -1886,10 +1885,11 @@ canvas {
 }
 
 .chassis-slot:hover {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.8);
+  border-width: 2px;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 1;
 }
 
