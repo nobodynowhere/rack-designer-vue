@@ -1727,7 +1727,7 @@ watch(showShareDialog, (visible) => {
   right: 0;
   bottom: 0;
   cursor: grab;
-  z-index: 1;
+  z-index: 0;
 }
 
 .device-drag-overlay:active {
@@ -1879,14 +1879,18 @@ canvas {
   transition: all 0.2s;
   font-size: 9px;
   gap: 1px;
-  /* Re-enable pointer events for individual slots so they're clickable */
+  /* Re-enable pointer events for individual slots so they're clickable and hoverable */
   pointer-events: auto;
+  /* Ensure hover effects work properly */
+  position: relative;
 }
 
 .chassis-slot:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1;
 }
 
 .chassis-slot.slot-occupied {
