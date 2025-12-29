@@ -1851,6 +1851,9 @@ canvas {
   /* Allow slots to fit within available space - critical for all chassis types */
   height: 100%;
   align-content: start;
+  /* Higher z-index than drag overlays to ensure slots are clickable */
+  position: relative;
+  z-index: 2;
   /* Allow drag events to pass through to parent for chassis dragging */
   pointer-events: none;
 }
