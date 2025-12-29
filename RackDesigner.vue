@@ -1796,15 +1796,16 @@ canvas {
 
 .chassis-slots {
   display: grid;
-  gap: 4px;
-  padding: 8px;
+  gap: 3px;
+  padding: 6px;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   margin-top: 4px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: calc(100% - 44px);
+  /* Use auto rows with minmax to ensure labels fit */
+  grid-auto-rows: minmax(auto, 1fr);
   /* Allow drag events to pass through to parent for chassis dragging */
   pointer-events: none;
 }
@@ -1819,16 +1820,16 @@ canvas {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 3px;
-  padding: 6px 4px;
-  min-height: 48px;
+  padding: 4px 3px;
+  min-height: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 11px;
-  gap: 2px;
+  font-size: 10px;
+  gap: 1px;
   /* Re-enable pointer events for individual slots so they're clickable */
   pointer-events: auto;
 }
@@ -1845,23 +1846,25 @@ canvas {
 }
 
 .slot-number {
-  font-weight: 600;
+  font-weight: 700;
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .slot-label {
-  color: white;
-  font-size: 10px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 9px;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.1;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
   max-width: 100%;
+  font-weight: 500;
 }
 
 /* Responsive */
