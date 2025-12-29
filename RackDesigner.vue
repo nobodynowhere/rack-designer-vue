@@ -1754,7 +1754,8 @@ canvas {
   top: 0;
   bottom: 0;
   width: auto;
-  max-width: 150px;
+  min-width: 50%;
+  max-width: 50%;
   flex-direction: column;
   justify-content: center;
   padding: 4px;
@@ -1812,7 +1813,7 @@ canvas {
 
 .device-main-display.compact-layout ~ .chassis-slots {
   margin-top: 0;
-  padding-left: 160px;
+  margin-left: 50%;
   max-height: 100%;
 }
 
