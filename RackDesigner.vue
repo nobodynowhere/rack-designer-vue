@@ -160,7 +160,7 @@
                         >
                           <div
                             class="device-main-display"
-                            :class="{ 'compact-layout': getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots?.rows && getDeviceAtPosition(u).slots.rows > 1 }"
+                            :class="{ 'compact-layout': getDeviceAtPosition(u).deviceType === 'chassis' && getDeviceAtPosition(u).slots }"
                             @dblclick.stop="handleDeviceDoubleClick($event, getDeviceAtPosition(u))"
                           >
                             <div class="device-header">
