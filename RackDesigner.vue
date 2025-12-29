@@ -1805,8 +1805,9 @@ canvas {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  /* Use auto rows with minmax to ensure labels fit */
-  grid-auto-rows: minmax(auto, 1fr);
+  /* Allow slots to fit within available space - critical for all chassis types */
+  height: 100%;
+  align-content: start;
   /* Allow drag events to pass through to parent for chassis dragging */
   pointer-events: none;
 }
@@ -1814,7 +1815,7 @@ canvas {
 .device-main-display.compact-layout ~ .chassis-slots {
   margin-top: 0;
   margin-left: 50%;
-  max-height: 100%;
+  height: 100%;
 }
 
 .chassis-slot {
@@ -1822,14 +1823,15 @@ canvas {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 3px;
   padding: 4px 3px;
-  min-height: 36px;
+  /* Use auto height to fit within grid space */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 10px;
+  font-size: 9px;
   gap: 1px;
   /* Re-enable pointer events for individual slots so they're clickable */
   pointer-events: auto;
