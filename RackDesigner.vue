@@ -195,6 +195,7 @@
                               :key="`slot-${slot}`"
                               class="chassis-slot"
                               :class="{ 'slot-occupied': getBladeInSlot(getDeviceAtPosition(u), slot) }"
+                              :title="getBladeInSlot(getDeviceAtPosition(u), slot) ? `Slot ${slot}: ${getBladeInSlot(getDeviceAtPosition(u), slot).label}` : `Slot ${slot}: Empty`"
                               @click.stop="openChassisSlotDialog(getDeviceAtPosition(u), slot)"
                               @dblclick.stop="handleDeviceDoubleClick($event, getDeviceAtPosition(u))"
                             >
@@ -1818,8 +1819,8 @@ canvas {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 3px;
-  padding: 4px;
-  min-height: 32px;
+  padding: 6px 4px;
+  min-height: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1827,6 +1828,7 @@ canvas {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 11px;
+  gap: 2px;
   /* Re-enable pointer events for individual slots so they're clickable */
   pointer-events: auto;
 }
@@ -1845,17 +1847,20 @@ canvas {
 .slot-number {
   font-weight: 600;
   color: white;
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .slot-label {
   color: white;
-  font-size: 9px;
+  font-size: 10px;
   text-align: center;
-  margin-top: 2px;
+  line-height: 1.2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
   max-width: 100%;
 }
 
