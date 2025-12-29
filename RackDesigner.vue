@@ -924,12 +924,21 @@ function getDeviceOccupyingPosition(u) {
 }
 
 function canDropAtPosition(u) {
+  // u is the rack unit being hovered (the TOP of where device would be placed)
+  // Need to calculate the bottom position for validation
+  const device = draggedInstalledDevice.value || draggedDevice.value;
+  if (!device) {
+    return false;
+  }
+
+  const bottomU = u - device.uHeight + 1;
+
   if (draggedInstalledDevice.value) {
     // When repositioning an installed device
-    return canPlaceDeviceForReposition(u, draggedInstalledDevice.value);
+    return canPlaceDeviceForReposition(bottomU, draggedInstalledDevice.value);
   } else if (draggedDevice.value) {
     // When adding from library
-    return canPlaceDevice(u, draggedDevice.value.uHeight);
+    return canPlaceDevice(bottomU, draggedDevice.value.uHeight);
   }
   return false;
 }
@@ -948,6 +957,7 @@ function shouldHighlightUnit(u) {
 
   const deviceHeight = device.uHeight;
 
+  // dropTargetU is the rack unit being hovered over (the TOP of where device would go)
   // Calculate bottom position if dropped at dropTargetU
   const bottomU = dropTargetU.value - deviceHeight + 1;
   const topU = dropTargetU.value;
@@ -955,8 +965,14 @@ function shouldHighlightUnit(u) {
   // Check if this unit would be occupied
   const wouldOccupy = u >= bottomU && u <= topU;
 
-  // Only highlight if the drop is valid
-  const isValidDrop = canDropAtPosition(dropTargetU.value);
+  // Check if the drop at this bottom position would be valid
+  // canPlaceDeviceForReposition expects the BOTTOM position as first parameter
+  let isValidDrop = false;
+  if (draggedInstalledDevice.value) {
+    isValidDrop = canPlaceDeviceForReposition(bottomU, draggedInstalledDevice.value);
+  } else if (draggedDevice.value) {
+    isValidDrop = canPlaceDevice(bottomU, draggedDevice.value.uHeight);
+  }
 
   return wouldOccupy && isValidDrop;
 }
