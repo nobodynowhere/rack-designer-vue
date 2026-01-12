@@ -32,12 +32,6 @@
               severity="secondary"
             />
             <Button
-              label="Share"
-              icon="pi pi-share-alt"
-              @click="showShareDialog = true"
-              severity="info"
-            />
-            <Button
               label="Clear"
               icon="pi pi-trash"
               @click="clearRack"
@@ -420,37 +414,6 @@
       </template>
     </Dialog>
 
-    <!-- Share Dialog -->
-    <Dialog
-      v-model:visible="showShareDialog"
-      header="Share Rack Layout"
-      :modal="true"
-      :style="{ width: '50vw' }"
-    >
-      <div class="share-content">
-        <div class="mb-3">
-          <label class="form-label">Share URL</label>
-          <div class="input-group">
-            <InputText
-              :modelValue="shareUrl"
-              readonly
-              class="w-100"
-            />
-            <Button
-              icon="pi pi-copy"
-              @click="copyShareUrl"
-              label="Copy"
-            />
-          </div>
-        </div>
-        
-        <div class="text-center">
-          <canvas ref="qrCanvas" />
-          <p class="text-muted mt-2">Scan QR code to open on mobile</p>
-        </div>
-      </div>
-    </Dialog>
-
     <!-- Chassis Slot Management Dialog -->
     <Dialog
       v-model:visible="showChassisSlotDialog"
@@ -629,7 +592,6 @@ import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
 
 // Props
 const props = defineProps({
@@ -649,6 +611,11 @@ const props = defineProps({
     default: 'Server Rack'
   },
   deviceLibrary: {
+    type: Array,
+    default: null
+  },
+  // New: Device records with fqdn, ID, rack_units format
+  deviceRecords: {
     type: Array,
     default: null
   }
@@ -671,7 +638,6 @@ const dropTargetU = ref(null);
 // Dialogs
 const showAddDeviceDialog = ref(false);
 const showAddChassisDialog = ref(false);
-const showShareDialog = ref(false);
 const showDeviceProperties = ref(false);
 const showChassisSlotDialog = ref(false);
 const showEditRackDialog = ref(false);
@@ -704,7 +670,6 @@ const bladeLabel = ref('');
 
 // Refs
 const rackElement = ref(null);
-const qrCanvas = ref(null);
 
 // Sample device library (in a real app, this would come from NetBox or an API)
 // Use props.deviceLibrary if provided, otherwise use default devices
@@ -857,7 +822,30 @@ const defaultDevices = [
   },
 ];
 
-const availableDevices = ref(props.deviceLibrary || defaultDevices);
+// Transform deviceRecords (fqdn, ID, rack_units) to internal device format
+function transformDeviceRecords(records) {
+  if (!records || !Array.isArray(records)) return [];
+
+  return records.map(record => ({
+    id: record.ID || record.id,
+    name: record.fqdn || record.name || 'Unknown Device',
+    manufacturer: record.manufacturer || 'Generic',
+    model: record.model || '',
+    uHeight: record.rack_units || record.uHeight || 1,
+    category: record.category || 'Server',
+    deviceType: record.deviceType || record.device_type || 'server',
+    image: record.image || null,
+    // Pass through any additional properties
+    ...record
+  }));
+}
+
+// Priority: deviceRecords > deviceLibrary > defaultDevices
+const availableDevices = ref(
+  props.deviceRecords
+    ? transformDeviceRecords(props.deviceRecords)
+    : (props.deviceLibrary || defaultDevices)
+);
 
 // Computed
 const filteredDevices = computed(() => {
@@ -879,11 +867,6 @@ const predefinedChassis = computed(() => {
   return availableDevices.value.filter(device => device.deviceType === 'chassis');
 });
 
-const shareUrl = computed(() => {
-  const state = encodeRackState();
-  return `${window.location.origin}${window.location.pathname}?rack=${state}`;
-});
-
 const canAddDevice = computed(() => {
   return selectedDeviceToAdd.value && deviceUPosition.value &&
          canPlaceDevice(deviceUPosition.value, selectedDeviceToAdd.value.uHeight);
@@ -900,7 +883,14 @@ const canAddChassis = computed(() => {
   }
 });
 
-// Watchers - Sync with rackModel prop changes
+// Watchers - Sync with deviceRecords prop changes
+watch(() => props.deviceRecords, (newRecords) => {
+  if (newRecords) {
+    availableDevices.value = transformDeviceRecords(newRecords);
+  }
+}, { deep: true });
+
+// Sync with rackModel prop changes
 watch(() => props.rackModel, (newRackModel) => {
   if (newRackModel) {
     if (newRackModel.name !== undefined) {
@@ -1461,27 +1451,6 @@ async function exportToPDF() {
   }
 }
 
-async function generateQRCode() {
-  if (!qrCanvas.value) return;
-  
-  try {
-    await QRCode.toCanvas(qrCanvas.value, shareUrl.value, {
-      width: 256,
-      margin: 2,
-    });
-  } catch (error) {
-    console.error('Error generating QR code:', error);
-  }
-}
-
-function copyShareUrl() {
-  navigator.clipboard.writeText(shareUrl.value).then(() => {
-    alert('Share URL copied to clipboard!');
-  }).catch(err => {
-    console.error('Failed to copy:', err);
-  });
-}
-
 function encodeRackState() {
   const state = {
     name: rackName.value,
@@ -1543,14 +1512,6 @@ onMounted(() => {
 
   if (rackState) {
     decodeRackState(rackState);
-  }
-});
-
-watch(showShareDialog, (visible) => {
-  if (visible) {
-    setTimeout(() => {
-      generateQRCode();
-    }, 100);
   }
 });
 </script>

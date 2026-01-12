@@ -13,7 +13,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // Externalize deps that shouldn't be bundled
-      external: ['vue', 'primevue', '@primevue/themes', 'primeicons', 'bootstrap', 'html2canvas', 'jspdf', 'qrcode'],
+      external: ['vue', 'primevue', '@primevue/themes', 'primeicons', 'bootstrap', 'html2canvas', 'jspdf'],
       output: {
         exports: 'named',
         // Provide global variables to use in the UMD build
@@ -25,7 +25,6 @@ export default defineConfig({
           bootstrap: 'Bootstrap',
           html2canvas: 'html2canvas',
           jspdf: 'jspdf',
-          qrcode: 'QRCode',
         },
         // Export CSS separately
         assetFileNames: (assetInfo) => {

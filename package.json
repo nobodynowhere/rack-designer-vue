@@ -31,16 +31,15 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "vue": "^3.4.0",
-    "primevue": "^4.5.0",
     "@primevue/themes": "^4.5.0",
-    "primeicons": "^7.0.0"
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.0",
+    "vue": "^3.4.0"
   },
   "dependencies": {
     "bootstrap": "^5.3.2",
     "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.4",
-    "qrcode": "^1.5.3"
+    "jspdf": "^3.0.4"
   },
   "devDependencies": {
     "@primevue/themes": "^4.5.4",
