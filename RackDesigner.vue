@@ -534,7 +534,7 @@
       v-model:visible="showEditRackDialog"
       header="Edit Rack Settings"
       :modal="true"
-      :style="{ width: '400px' }"
+      :style="{ width: '500px' }"
     >
       <div class="edit-rack-form">
         <div class="mb-3">
@@ -547,13 +547,32 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Rack Height (U)</label>
+          <label class="form-label">Total U (Rack Height)</label>
           <InputNumber
             v-model="editRackHeightValue"
             :min="10"
             :max="52"
             showButtons
             class="w-100"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Rack Location</label>
+          <InputText
+            v-model="editRackLocationValue"
+            class="w-100"
+            placeholder="Enter rack location (e.g., Room A, Row 3)"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Notes</label>
+          <Textarea
+            v-model="editRackNotesValue"
+            rows="4"
+            class="w-100"
+            placeholder="Enter notes about this rack"
           />
         </div>
       </div>
@@ -625,9 +644,16 @@ const props = defineProps({
 const emit = defineEmits(['rack-updated', 'device-added', 'device-removed', 'device-moved', 'blade-added', 'blade-removed']);
 
 // State - initialize from rackModel if provided, otherwise use legacy props
-const rackHeight = ref(props.rackModel?.height || props.initialRackHeight);
+const rackHeight = ref(props.rackModel?.total_u || props.rackModel?.height || props.initialRackHeight);
 const rackName = ref(props.rackModel?.name || props.initialRackName);
+const rackNotes = ref(props.rackModel?.notes || '');
+const rackLocation = ref(props.rackModel?.rack_location || '');
 const installedDevices = ref(props.rackModel?.devices || []);
+
+// Read-only rack properties (not editable)
+const rackId = ref(props.rackModel?.ID || props.rackModel?.id || null);
+const siteId = ref(props.rackModel?.site_id || null);
+const createdAt = ref(props.rackModel?.created_at || null);
 const selectedDevice = ref(null);
 const deviceSearchQuery = ref('');
 const isDragOver = ref(false);
@@ -645,6 +671,8 @@ const showEditRackDialog = ref(false);
 // Edit rack form
 const editRackNameValue = ref('');
 const editRackHeightValue = ref(42);
+const editRackLocationValue = ref('');
+const editRackNotesValue = ref('');
 
 // Add device form
 const selectedDeviceToAdd = ref(null);
@@ -896,23 +924,47 @@ watch(() => props.rackModel, (newRackModel) => {
     if (newRackModel.name !== undefined) {
       rackName.value = newRackModel.name;
     }
-    if (newRackModel.height !== undefined) {
+    if (newRackModel.total_u !== undefined) {
+      rackHeight.value = newRackModel.total_u;
+    } else if (newRackModel.height !== undefined) {
       rackHeight.value = newRackModel.height;
+    }
+    if (newRackModel.rack_location !== undefined) {
+      rackLocation.value = newRackModel.rack_location;
+    }
+    if (newRackModel.notes !== undefined) {
+      rackNotes.value = newRackModel.notes;
     }
     if (newRackModel.devices !== undefined) {
       installedDevices.value = newRackModel.devices;
+    }
+    // Update read-only properties
+    if (newRackModel.ID !== undefined || newRackModel.id !== undefined) {
+      rackId.value = newRackModel.ID || newRackModel.id;
+    }
+    if (newRackModel.site_id !== undefined) {
+      siteId.value = newRackModel.site_id;
+    }
+    if (newRackModel.created_at !== undefined) {
+      createdAt.value = newRackModel.created_at;
     }
   }
 }, { deep: true });
 
 // Emit updates when internal state changes (for two-way binding)
-watch([rackName, rackHeight, installedDevices], () => {
+watch([rackName, rackHeight, rackLocation, rackNotes, installedDevices], () => {
   if (props.rackModel) {
     // Update the rackModel prop (parent should handle via v-model or @rack-updated)
     emit('rack-updated', {
       name: rackName.value,
+      total_u: rackHeight.value,
       height: rackHeight.value,
-      devices: installedDevices.value
+      rack_location: rackLocation.value,
+      notes: rackNotes.value,
+      devices: installedDevices.value,
+      ...(rackId.value && { ID: rackId.value, id: rackId.value }),
+      ...(siteId.value && { site_id: siteId.value }),
+      ...(createdAt.value && { created_at: createdAt.value }),
     });
   }
 }, { deep: true });
@@ -1311,8 +1363,11 @@ function clearRack() {
 }
 
 function editRackName() {
+  // Populate form with current values
   editRackNameValue.value = rackName.value;
   editRackHeightValue.value = rackHeight.value;
+  editRackLocationValue.value = rackLocation.value;
+  editRackNotesValue.value = rackNotes.value;
   showEditRackDialog.value = true;
 }
 
@@ -1320,11 +1375,16 @@ function cancelEditRack() {
   showEditRackDialog.value = false;
   editRackNameValue.value = '';
   editRackHeightValue.value = 42;
+  editRackLocationValue.value = '';
+  editRackNotesValue.value = '';
 }
 
 function saveRackSettings() {
+  // Update all editable rack properties
   rackName.value = editRackNameValue.value;
   rackHeight.value = editRackHeightValue.value;
+  rackLocation.value = editRackLocationValue.value;
+  rackNotes.value = editRackNotesValue.value;
   showEditRackDialog.value = false;
   updateRackState();
 }
@@ -1490,11 +1550,20 @@ function decodeRackState(encoded) {
 }
 
 function updateRackState() {
-  // Emit rack-updated event with current state
+  // Emit rack-updated event with complete rack state
   emit('rack-updated', {
+    // Editable properties
     name: rackName.value,
-    height: rackHeight.value,
-    devices: installedDevices.value
+    total_u: rackHeight.value,
+    height: rackHeight.value, // Keep for backward compatibility
+    rack_location: rackLocation.value,
+    notes: rackNotes.value,
+    devices: installedDevices.value,
+
+    // Read-only properties (pass through if they exist)
+    ...(rackId.value && { ID: rackId.value, id: rackId.value }),
+    ...(siteId.value && { site_id: siteId.value }),
+    ...(createdAt.value && { created_at: createdAt.value }),
   });
 
   // Update URL with current state
