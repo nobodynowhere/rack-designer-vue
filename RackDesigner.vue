@@ -604,6 +604,7 @@ import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
+import Textarea from 'primevue/textarea';
 import Dialog from 'primevue/dialog';
 import Drawer from 'primevue/drawer';
 import ScrollPanel from 'primevue/scrollpanel';
